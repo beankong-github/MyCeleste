@@ -29,7 +29,7 @@ void CTestScene::CreateTestScene()
 	CScene* pCurScene = new CScene;
 	CSceneMgr::GetInst()->ChangeScene(pCurScene);
 
-	//return;
+	return;
 
 	pCurScene->SetLayerName(0, L"Tile");
 	pCurScene->SetLayerName(1, L"Default");
@@ -76,26 +76,31 @@ void CTestScene::CreateTestScene()
 	// TileMap 추가
 	Ptr<CTexture> tileAtlas = CResMgr::GetInst()->Load<CTexture>(L"texture\\TILE_32.bmp", L"texture\\TILE_32.bmp");
 
-	//CGameObject* pTileMap = new CGameObject;
-	//pTileMap->SetName(L"TileMap");
-	//pTileMap->AddComponent(new CTransform);
-	//pTileMap->Transform()->SetRelativePos(Vec3{ 0, 0, 10 });
-	//pTileMap->Transform()->SetRelativeScale(Vec3{ 1500, 500, 1 });
-	//
-	//pTileMap->AddComponent(new CTileMap);
-	//pTileMap->TileMap()->SetAtlasTex(tileAtlas);
-	//pTileMap->TileMap()->SetTileSize(Vec2{ 64, 64 });
-	//pTileMap->TileMap()->SetTileMapSize(30, 10);
-	//
-	//int iTileMapSize = pTileMap->TileMap()->GetTileMapSize().x * pTileMap->TileMap()->GetTileMapSize().y;
-	//for (int i = 0; i < iTileMapSize; i++)
-	//{
-	//	pTileMap->TileMap()->SetTileData(i, 2);
-	//}
-	//
-	//pCurScene->AddObject(pTileMap, L"Tile");
-	//
-	// Plane Object
+	CGameObject* pTileMap = new CGameObject;
+	pTileMap->SetName(L"TileMap");
+	pTileMap->AddComponent(new CTransform);
+	pTileMap->Transform()->SetRelativePos(Vec3{ 0, 0, 10 });
+	pTileMap->Transform()->SetRelativeScale(Vec3{ 1500, 500, 1 });
+	
+	pTileMap->AddComponent(new CTileMap);
+	pTileMap->TileMap()->SetAtlasTex(tileAtlas);
+	pTileMap->TileMap()->SetTileSize(Vec2{ 64, 64 });
+	pTileMap->TileMap()->SetTileMapSize(30, 10);
+	
+	int iTileMapSize = pTileMap->TileMap()->GetTileMapSize().x * pTileMap->TileMap()->GetTileMapSize().y;
+	for (int i = 0; i < iTileMapSize; i++)
+	{
+		pTileMap->TileMap()->SetTileData(i, 2);
+	}
+	
+	pCurScene->AddObject(pTileMap, L"Tile");
+
+	// 프리팹으로 등록
+	CPrefab* pPrefab = new CPrefab;
+	pPrefab->SetProto(pTileMap->Clone());
+	CResMgr::GetInst()->AddRes<CPrefab>(L"prefab\\tilemap.pref", pPrefab);
+
+	
 	//CGameObject* pObject = new CGameObject;
 	//pObject->SetName(L"Background");
 	//

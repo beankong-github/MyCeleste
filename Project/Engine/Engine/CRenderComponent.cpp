@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "CRenderComponent.h"
 
+#include "CSceneMgr.h"
+#include "CScene.h"
+
 CRenderComponent::CRenderComponent(COMPONENT_TYPE _type)
 	: CComponent(_type)
 	, m_pMesh(nullptr)
@@ -44,6 +47,10 @@ Ptr<CMaterial> CRenderComponent::GetSharedMaterial()
 
 Ptr<CMaterial> CRenderComponent::GetDynamicMaterial()
 {
+	// Play 모드에서만 메터리얼의 인스턴스를 얻을 수 있음
+	if (CSceneMgr::GetInst()->GetCurScene()->GetSceneState() != SCENE_STATE::PLAY)
+		return nullptr;
+
 	if (nullptr != m_pDynamicMtrl && m_pDynamicMtrl->GetMasterMtrl() != m_pSharedMtrl)
 	{
 		CMaterial* pMtrl = m_pDynamicMtrl.Get();

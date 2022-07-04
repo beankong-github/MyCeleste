@@ -217,7 +217,7 @@ void CCamera::LoadFromScene(FILE* _pFile)
 void CCamera::SetCameraAsMain()
 {
 	tEventInfo tEvent = {};
-	tEvent.eType = EVENT_TYPE::SET_CAMEAR_INDEX;
+	tEvent.eType = EVENT_TYPE::SET_CAMERA_INDEX;
 	tEvent.lParam = (DWORD_PTR)this;
 	tEvent.wParam = 0;
 
@@ -231,7 +231,7 @@ void CCamera::SetCameraIndex(int _iIdx)
 
 	tEventInfo tEvent = {};
 
-	tEvent.eType = EVENT_TYPE::SET_CAMEAR_INDEX;
+	tEvent.eType = EVENT_TYPE::SET_CAMERA_INDEX;
 	tEvent.lParam = (DWORD_PTR)this;
 	tEvent.wParam = _iIdx;
 

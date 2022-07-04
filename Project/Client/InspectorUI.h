@@ -7,7 +7,7 @@ class ComponentUI;
 class ScriptUI;
 class ResInfoUI;
 class CRes;
-
+class Create2DAnimationUI;
 
 class InspectorUI :
     public UI
@@ -20,9 +20,11 @@ private:
     ResInfoUI*          m_arrResUI[(UINT)RES_TYPE::END];
 
     vector<ScriptUI*>   m_vecScriptUI;
-
+    Create2DAnimationUI* m_pCreate2DAnim;
 
 public:
+    CGameObject* GetTargetObject() { return m_pTargetObject; }
+
     void SetTargetObject(CGameObject* _pTarget);
     void SetTargetResource(CRes* _pTargetRes);
 

@@ -264,6 +264,17 @@ void CGameObject::Deactivate()
 	CEventMgr::GetInst()->AddEvent(info);
 }
 
+void CGameObject::ChangeLayer(int _iLayer)
+{
+	tEventInfo info = {};
+
+	info.eType = EVENT_TYPE::CHANGE_LAYER;
+	info.lParam = (DWORD_PTR)this;
+	info.wParam = (DWORD_PTR)_iLayer;
+
+	CEventMgr::GetInst()->AddEvent(info);
+}
+
 bool CGameObject::IsAncestor(CGameObject* _pObj)
 {
 	CGameObject* pObj = m_pParent;
@@ -366,6 +377,9 @@ void CGameObject::SaveToScene(FILE* _pFile)
 	// ============
 	//  상태값 저장
 	// ============
+	// m_iLayer
+	// fwrite(&m_iLayerIdx, sizeof(int), 1, _pFile);
+
 	// m_bActive;
 	// m_bDynamicShadow;
 	// m_bFrustumCulling;
@@ -394,10 +408,12 @@ void CGameObject::LoadFromScene(FILE* _pFile)
 	// ==============
 	CEntity::LoadFromScene(_pFile);
 	
-
 	// ===============
 	//  상태값 불러오기
 	// ===============
+	// m_iLayer
+	// fread(&m_iLayerIdx, sizeof(int), 1, _pFile);
+
 	// m_bActive
 	// m_bDynamicShadow;
 	// m_bFrustumCulling

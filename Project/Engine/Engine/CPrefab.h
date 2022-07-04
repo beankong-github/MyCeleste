@@ -10,13 +10,21 @@ private:
     CGameObject* m_pProtoObj;
 
 
+// 프리팹 Sava/Load 함수 포인터
+public:
+    typedef void (*SaveFunc) (CPrefab*, const wstring&);
+    typedef int (*LoadFunc) (CPrefab*, const wstring&);
+    static SaveFunc        m_pSaveFunc;
+    static LoadFunc        m_pLoadFunc;
+
 public:
     CGameObject* Instantiate();
+    CGameObject* GetProto() { return m_pProtoObj; }
+    void SetProto(CGameObject* _pProto) { m_pProtoObj = _pProto; }
 
-    virtual int Load(const wstring& _strFilePath)
-    {
-        return S_OK;
-    }
+public:
+    virtual int Save(const wstring& _strFilePath);
+    virtual int Load(const wstring& _strFilePath);
 
 public:
     CPrefab();

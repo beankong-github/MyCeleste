@@ -116,7 +116,7 @@ void CEventMgr::update()
 		break;
 
 
-		case EVENT_TYPE::SET_CAMEAR_INDEX:
+		case EVENT_TYPE::SET_CAMERA_INDEX:
 		{
 			CCamera* cam = (CCamera*)m_vecEvent[i].lParam;
 			int iChangeIdx = (int)m_vecEvent[i].wParam;
@@ -163,6 +163,21 @@ void CEventMgr::update()
 		case EVENT_TYPE::SCENE_CHANGE:
 		{
 			m_bObjEvn = true;
+		}
+		break;
+
+		case EVENT_TYPE::CHANGE_LAYER:
+		{
+			CGameObject* pObject = (CGameObject*)m_vecEvent[i].lParam;
+			int iLayer = (int)m_vecEvent[i].wParam;
+
+			// 기존 Layer 연결 해제
+			pObject->Deregister();
+
+			// 새 Layer에 등록
+			CScene* pScene = CSceneMgr::GetInst()->GetCurScene();
+			pObject->m_iLayerIdx = iLayer;
+			pScene->AddObject(pObject, iLayer);
 		}
 		break;
 

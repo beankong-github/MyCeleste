@@ -4,6 +4,8 @@
 #include "CLayer.h"
 #include "CGameObject.h"
 
+#include "CEventMgr.h"
+#include "CTransform.h"
 
 
 CScene::CScene()
@@ -15,6 +17,17 @@ CScene::CScene()
 		m_arrLayer[i] = new CLayer;
 		m_arrLayer[i]->m_iLayerIdx = i;
 	}
+
+
+	SetLayerName(0, L"Background");
+	SetLayerName(1, L"Default");
+	SetLayerName(2, L"TileMap_Back");
+	SetLayerName(3, L"TileMap_Front");
+	SetLayerName(4, L"Object_Back");
+	SetLayerName(5, L"Player");
+	SetLayerName(6, L"Object_Front");
+	SetLayerName(7, L"Effect");
+	SetLayerName(8, L"Camera");
 }
 
 CScene::~CScene()
@@ -61,7 +74,6 @@ void CScene::SetLayerName(int _iLayerIdx, const wstring& _strName)
 	assert(0 <= _iLayerIdx && _iLayerIdx < MAX_LAYER);
 	m_arrLayer[_iLayerIdx]->SetName(_strName);
 }
-
 
 int CScene::GetLayerIdxFromName(const wstring& _strName)
 {

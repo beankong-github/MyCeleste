@@ -59,10 +59,11 @@ void SceneOutliner::render_update()
 	if (!ImGui::IsWindowFocused())
 		return;
 
-	Vec2 vWinLT = Vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
-	Vec2 vWinRB = vWinLT + Vec2(ImGui::GetWindowContentRegionMax().x, ImGui::GetWindowContentRegionMax().y);
-	if (ImGui::IsMouseHoveringRect(vWinLT, vWinRB) && ImGui::IsMouseClicked(ImGuiButtonFlags_MouseButtonRight >> 1))
-		OnRightClicked();
+	// 우클릭 감지
+	//Vec2 vWinLT = Vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
+	//Vec2 vWinRB = vWinLT + Vec2(ImGui::GetWindowContentRegionMax().x, ImGui::GetWindowContentRegionMax().y);
+	//if (ImGui::IsMouseHoveringRect(vWinLT, vWinRB) && ImGui::IsMouseClicked(ImGuiButtonFlags_MouseButtonRight >> 1))
+	//	OnRightClicked();
 }
 
 void SceneOutliner::Reset()
@@ -83,6 +84,10 @@ void SceneOutliner::Reset()
 			AddGameObjectToTree(vecRoots[i], m_TreeUI->GetDummyNode());
 		}
 	}
+
+	// InspectorUI의 타겟 Object를 비워준다
+	InspectorUI* pInspectorUI = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
+	pInspectorUI->SetTargetObject(nullptr);
 }
 
 void SceneOutliner::OnObjectNodeClicked(DWORD_PTR _dw)

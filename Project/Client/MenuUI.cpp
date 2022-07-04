@@ -1,16 +1,27 @@
 #include "pch.h"
 #include "MenuUI.h"
 
-#include <Engine/CCore.h>
-#include <Engine/CPathMgr.h>
+#include <Engine\CCore.h>
+#include <Engine\CPathMgr.h>
+                
+#include <Engine\CSceneMgr.h>
+#include <Engine\CScene.h>
+#include <Script\CScriptMgr.h>
 
-#include <Engine/CSceneMgr.h>
-#include <Engine/CScene.h>
-#include <Script/CScriptMgr.h>
+#include <Engine\CGameObject.h>
+#include <Engine\CTransform.h>
+#include <Engine\CCamera.h>
+#include <Engine\CCollider2D.h>
+#include <Engine\CAnimator2D.h>
+#include <Engine\CTileMap.h>
+#include <Engine\CLight2D.h>
+#include <Engine\CParticleSystem.h>
+#include <Engine\CMeshRender.h>
 
-#include <Script/CSceneSaveLoad.h>
+#include <Script\CSceneSaveLoad.h>
 #include "CImGuiMgr.h"
 #include "SceneOutliner.h"
+#include "InspectorUI.h"
 
 MenuUI::MenuUI()
     : UI("Menu")
@@ -60,35 +71,128 @@ void MenuUI::render_update()
 
         ImGui::EndMenu();
     }
+   
 
-    if (ImGui::BeginMenu("Component"))
+    if (ImGui::BeginMenu("Object"))
     {
+        if (ImGui::MenuItem("CreateObject", NULL))
+        {
+            CGameObject* pObj = new CGameObject;
+            pObj->SetName(L"GameObject");
+            pObj->AddComponent(new CTransform);
+            Vec3 vPos(0.f, 0.f, 0.f);
+            CSceneMgr::GetInst()->SpawnObject(pObj, vPos, L"GameObject", 1);
+        }
+
         if (ImGui::BeginMenu("Add Component"))
         {
-            ImGui::MenuItem("MeshRender", NULL);
-            ImGui::MenuItem("Camera", NULL);
-            ImGui::MenuItem("Collider2D", NULL);
-            ImGui::MenuItem("Collider3D", NULL);
-            ImGui::MenuItem("Animator2D", NULL);
-            ImGui::MenuItem("Animator3D", NULL);
+            // Inspector에 TargetObject가 있는지 확인
+            bool available = false;
+            CGameObject* pTarget = nullptr;
 
-            if (ImGui::BeginMenu("Add Script"))
+            InspectorUI* pInspector = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
+            if (nullptr != pInspector)
             {
-                vector<wstring> vecScriptName;
-                CScriptMgr::GetScriptInfo(vecScriptName);
-                for (size_t i = 0; i < vecScriptName.size(); ++i)
-                {
-                    string strScriptName = string(vecScriptName[i].begin(), vecScriptName[i].end());
-                    ImGui::MenuItem(strScriptName.c_str(), NULL);
-                }
-                ImGui::EndMenu();
+                pTarget = pInspector->GetTargetObject();
+                available = (pTarget != nullptr);
+            }
+            else
+            {
+                available = false;
             }
 
+            if (ImGui::MenuItem("Camera", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::CAMERA))
+                {
+                    pTarget->AddComponent(new CCamera);
+                    pTarget->Camera()->CheckLayerMaskAll();
+                }
+            }
+            if (ImGui::MenuItem("Collider2D", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::COLLIDER2D))
+                {
+                    pTarget->AddComponent(new CCollider2D);
+                }
+            }
+            //ImGui::MenuItem("Collider3D", NULL, false, available);
+            
+            if (ImGui::MenuItem("Animator2D", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::ANIMATOR2D))
+                {
+                    pTarget->AddComponent(new CAnimator2D);
+                }
+            }
+            //ImGui::MenuItem("Animator3D", NULL, false, available);
+            
+            if (ImGui::MenuItem("LIGHT2D", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::LIGHT2D))
+                {
+                    pTarget->AddComponent(new CLight2D);
+                }
+            }
+            //ImGui::MenuItem("LIGHT3D", NULL, false, available);
+            
+            if (ImGui::MenuItem("MeshRender", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::MESHRENDER))
+                {
+                    pTarget->AddComponent(new CMeshRender);
+                }
+            }
+            if (ImGui::MenuItem("TileMap", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::TILEMAP))
+                {
+                    pTarget->AddComponent(new CTileMap);
+                }
+            }
+            if (ImGui::MenuItem("ParticleSystem", NULL, false, available))
+            {
+                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::PARTICLESYSTEM))
+                {
+                    pTarget->AddComponent(new CParticleSystem);
+                }
+            }
+            //ImGui::MenuItem("LandScape",NULL, false, available);
+            //ImGui::MenuItem("Decal",NULL, false, available);
+            
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Add Script"))
+        {
+            // Inspector에 TargetObject가 있는지 확인
+            bool available = false;
+            CGameObject* pTarget = nullptr;
+
+            InspectorUI* pInspector = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
+            if (nullptr != pInspector)
+            {
+                pTarget = pInspector->GetTargetObject();
+                available = (pTarget != nullptr);
+            }
+            else
+            {
+                available = false;
+            }
+
+            vector<wstring> vecScriptName;
+            CScriptMgr::GetScriptInfo(vecScriptName);
+            for (size_t i = 0; i < vecScriptName.size(); ++i)
+            {
+                string strScriptName = string(vecScriptName[i].begin(), vecScriptName[i].end());
+                ImGui::MenuItem(strScriptName.c_str(), NULL, false, available);
+            }
+            ImGui::EndMenu();
+        }        
+        
         ImGui::EndMenu();
     }
+
 
     if (ImGui::BeginMenu("Tools"))
     {
@@ -218,6 +322,8 @@ void MenuUI::Task()
                 CScene* pNewScene = CSceneSaveLoad::LoadScene(strFilePath);
                 CSceneMgr::GetInst()->ChangeScene(pNewScene);
             }
+            // SceneOutliner 갱신
+            ((SceneOutliner*)CImGuiMgr::GetInst()->FindUI("SceneOutliner"))->Reset();
 
             m_bSceneStop = false;
         }

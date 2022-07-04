@@ -61,6 +61,11 @@ void CSceneMgr::ChangeScene(CScene* _pNextScene)
 		delete m_pCurScene;
 
 	m_pCurScene = _pNextScene;
+
+
+	tEventInfo info = {};
+	info.eType = EVENT_TYPE::SCENE_CHANGE;
+	CEventMgr::GetInst()->AddEvent(info);
 }
 
 void CSceneMgr::SpawnObject(CGameObject* _pSpawnObject, Vec3 _vWorldPos, wstring _strName, UINT _iLayerIdx)

@@ -214,7 +214,7 @@ enum class EVENT_TYPE
 	DELETE_OBJ,				// lParam : Object Adress
 	ADD_CHILD,				// lParam : Parent Object, wParam : Child Object
 	DISCONNECT_PARENT,		// lParam : Object Adress
-	SET_CAMEAR_INDEX,		// lParam : Camera Component Adress, wParam : Camera Change Index
+	SET_CAMERA_INDEX,		// lParam : Camera Component Adress, wParam : Camera Change Index
 
 	ACTIVATE_OBJECT,		// lParam : Object Adress
 	DEACTIVATE_OBJECT,		// lParam : Object Adress
@@ -223,7 +223,9 @@ enum class EVENT_TYPE
 	DEACTIVATE_COMOPNENT,   // lParam : Component Adress
 
 	SCENE_CHANGE,			// lParam : Next Stage Enum
-	CHANGE_AI_STATE,		// lParam : FSM Adress, wParam : Next State Type
+	CHANGE_AI_STATE,		// lParam : FSM Address, wParam : Next State Type
+
+	CHANGE_LAYER,			// lParam : Object Address, wParam : Layer Index
 
 	DELETE_RES,				// lParam : ResAdress
 

@@ -56,6 +56,7 @@ public:
     void DisconnectBetweenParent();
     void Activate();
     void Deactivate();
+    void ChangeLayer(int _iLayer);
 
     bool IsDead() { return m_bDead; }
     bool IsActive() { return m_bActive; }

@@ -148,6 +148,9 @@
     <ClInclude Include="CLight2D.h">
       <Filter>Engine\05. Component\07. Light2D</Filter>
     </ClInclude>
+    <ClInclude Include="CMgrScript.h">
+      <Filter>Engine\05. Component\15. Script\MgrScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -449,6 +452,9 @@
     </Filter>
     <Filter Include="Engine\05. Component\10~14. RenderComponent\14. Decal">
       <UniqueIdentifier>{05855d34-a528-4b6c-acee-fe4b10878a15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Component\15. Script\MgrScript">
+      <UniqueIdentifier>{cea679a7-8ed9-4d05-913f-3356115077e7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

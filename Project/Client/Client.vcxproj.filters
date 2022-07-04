@@ -102,6 +102,18 @@
     <ClCompile Include="Create2DAnimationUI.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="CToolObjMgr.cpp">
+      <Filter>Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="CGameObjectEx.cpp">
+      <Filter>EditorObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorCamScript.cpp">
+      <Filter>EditorObject\EditorObjectScript</Filter>
+    </ClCompile>
+    <ClCompile Include="CCameraEx.cpp">
+      <Filter>EditorObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -218,6 +230,18 @@
     <ClInclude Include="ToggleUI.h" />
     <ClInclude Include="Create2DAnimationUI.h">
       <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="CToolObjMgr.h">
+      <Filter>Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="CGameObjectEx.h">
+      <Filter>EditorObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorCamScript.h">
+      <Filter>EditorObject\EditorObjectScript</Filter>
+    </ClInclude>
+    <ClInclude Include="CCameraEx.h">
+      <Filter>EditorObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -357,6 +381,12 @@
     </Filter>
     <Filter Include="ImGui\UI\Module\ToggleUI">
       <UniqueIdentifier>{7330a265-83f9-43b0-badf-c5f07a9fde3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EditorObject">
+      <UniqueIdentifier>{fc841349-72d2-4d96-ac5e-b80c97bac45e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EditorObject\EditorObjectScript">
+      <UniqueIdentifier>{7bd78c5c-f38f-43bd-abb0-e88083e7a046}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

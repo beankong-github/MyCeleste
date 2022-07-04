@@ -8,8 +8,13 @@
 #include <Engine/CCore.h>
 #include <Engine/CDevice.h>
 
+#include <Script\CSceneSaveLoad.h>
+
 #include "CImGuiMgr.h"
 #include "ImGui/imgui_impl_win32.h"
+
+#include "CToolObjMgr.h"
+
 #include "CTestScene.h"
 
 
@@ -55,9 +60,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         return 0;
     }
-    CTestScene::CreateTestScene();
-    CCore::GetInst()->progress();
 
+    // Prefab Save Load 콜백 등록
+    CPrefab::m_pSaveFunc = (CPrefab::SaveFunc)&CSceneSaveLoad::SavePrefab;
+    CPrefab::m_pLoadFunc = (CPrefab::LoadFunc)&CSceneSaveLoad::LoadPrefab;
+
+
+    // TestScene 생성
+    CTestScene::CreateTestScene();
+    CCore::GetInst()->progress();   // 한번 Update를 돌려 렌더 타겟을 초기화해준다
+
+    // ToolObj 초기화
+    CToolObjMgr::GetInst()->init();
 
     // ImGui 초기화
     CImGuiMgr::GetInst()->init(g_hWnd);
@@ -87,6 +101,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         {
             // Engine Update
             CCore::GetInst()->progress();
+            
+            // ToolObject 
+            CToolObjMgr::GetInst()->progress();
 
             // ImGui Update, render
             CImGuiMgr::GetInst()->progress();

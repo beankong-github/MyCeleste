@@ -3,12 +3,14 @@
 
 #include "CDevice.h"
 #include "CConstBuffer.h"
+#include "CStructuredBuffer.h"
 
+#include "CSceneMgr.h"
+#include "CScene.h"
 #include "CCamera.h"
 #include "CResMgr.h"
 #include "CLight2D.h"
 
-#include "CStructuredBuffer.h"
 
 CRenderMgr::CRenderMgr()
 	: m_pEditorCam(nullptr)
@@ -33,11 +35,11 @@ void CRenderMgr::update()
 
 void CRenderMgr::render()
 {
-	// Render Target Clear
+	// Rendering 시작
 	CDevice::GetInst()->SetRenderTarget();
 	CDevice::GetInst()->ClearTarget();
 
-	// Light Update
+	// Light 업데이트
 	UpdateLight2D();
 
 	// Global 상수 업데이트
@@ -46,7 +48,23 @@ void CRenderMgr::render()
 	pGlobalCB->UpdateData();
 	pGlobalCB->UpdateData_CS();
 
-	// 카메라가 없으면 렌더하지 않는다.
+	CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+
+	// 현재 씬 상태가 Play -> Main 카메라 기준으로 Render
+	if (pCurScene->GetSceneState() == SCENE_STATE::PLAY)
+	{
+		render_play();
+	}
+
+	// 현재 씬 상태가 Stop/Pause -> Editor 카메라 기준으로 Render
+	else
+	{
+		render_editor();
+	}
+}
+
+void CRenderMgr::render_play()
+{
 	if (m_vecCam.empty())
 		return;
 
@@ -72,26 +90,51 @@ void CRenderMgr::render()
 	pMainCam->render_postprocess();
 
 
-	//// Sub 카메라 시점으로 렌더링
-	//for (int i = 1; i < m_vecCam.size(); ++i)
-	//{
-	//	if (nullptr == m_vecCam[i])
-	//		continue;
+	// Sub 카메라 시점으로 렌더링
+	for (int i = 1; i < m_vecCam.size(); ++i)
+	{
+		if (nullptr == m_vecCam[i])
+			continue;
 
-	//	m_vecCam[i]->SortGameObject();
+		m_vecCam[i]->SortGameObject();
 
-	//	g_transform.matView = m_vecCam[i]->GetViewMat();
-	//	g_transform.matProj = m_vecCam[i]->GetProjMat();
+		g_transform.matView = m_vecCam[i]->GetViewMat();
+		g_transform.matProj = m_vecCam[i]->GetProjMat();
 
-	//	// Foward 물체 렌더링
-	//	m_vecCam[i]->render_forward();
+		// Foward 물체 렌더링
+		m_vecCam[i]->render_forward();
 
-	//	// Masked 물체 렌더링
-	//	m_vecCam[i]->render_masked();
+		// Masked 물체 렌더링
+		m_vecCam[i]->render_masked();
 
-	//	// Alpha 물체 렌더링
-	//	m_vecCam[i]->render_translucent();
-	//}	
+		// Alpha 물체 렌더링
+		m_vecCam[i]->render_translucent();
+	}
+}
+
+void CRenderMgr::render_editor()
+{
+	if (nullptr == m_pEditorCam)
+		return;
+
+	// 에디터 카메라 시점으로 렌더링
+	// Camera 가 찍는 Layer 의 오브젝트들을 Shader Domain 에 따라 분류해둠
+	m_pEditorCam->SortGameObject();
+
+	g_transform.matView = m_pEditorCam->GetViewMat();
+	g_transform.matProj = m_pEditorCam->GetProjMat();
+
+	// Foward 물체 렌더링
+	m_pEditorCam->render_forward();
+
+	// Masked 물체 렌더링
+	m_pEditorCam->render_masked();
+
+	// Alpha 물체 렌더링
+	m_pEditorCam->render_translucent();
+
+	// PostProcess 물체 렌더링
+	m_pEditorCam->render_postprocess();
 }
 
 void CRenderMgr::RegisterCamera(CCamera* _pCam)
