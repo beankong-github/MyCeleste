@@ -16,6 +16,9 @@
 
 
 CImGuiMgr::CImGuiMgr()
+    : m_hNotify(nullptr)
+    , m_mapUI{}
+    , m_vecDelegate{}
 {
 
 }
@@ -59,9 +62,9 @@ void CImGuiMgr::init(HWND _hwnd)
     wstring wstrFilePath = CPathMgr::GetInst()->GetContentPath();
     string strFontPath = string(wstrFilePath.begin(), wstrFilePath.end()) + "font\\Pretendard-Medium.ttf";
     io.Fonts->AddFontFromFileTTF(strFontPath.c_str(), 15.f, NULL, io.Fonts->GetGlyphRangesKorean());
+    //io.Fonts->AddFontDefault();
 
     // Icon Ãß°¡
-    //io.Fonts->AddFontDefault();
     string strIconPath = string(wstrFilePath.begin(), wstrFilePath.end()) + "font\\icon\\";
     ImFontConfig icons_config;
     icons_config.MergeMode = true;

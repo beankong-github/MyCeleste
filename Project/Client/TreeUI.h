@@ -45,6 +45,7 @@ public:
 
 typedef void(UI::* CLICKED)(DWORD_PTR);
 typedef void(UI::* DRAG_DROP)(DWORD_PTR, DWORD_PTR);
+typedef bool(UI::* DROPCHECK)();
 typedef CLICKED KEY_FUNC;
 
 
@@ -62,6 +63,7 @@ class TreeUI :
 private:
     TreeNode*           m_pRootNode;
     TreeNode*           m_pSelectedNode;
+    TreeNode*           m_pDragNodeforOther;
     TreeNode*           m_pDragNode;
     TreeNode*           m_pDropNode;
 
@@ -71,6 +73,7 @@ private:
 
     bool                m_bUseDragDropSelf;
     bool                m_bUseDragDropOuter;
+    bool                m_bIsDropFromOuter;
 
     int                 m_iTest;
 
@@ -82,9 +85,13 @@ private:
     UI*                 m_pDBCInst;
     CLICKED             m_DBCFunc;
 
-    // Drag And Drop
+    // Drag And Drop Inside
     UI*                 m_pDADInst;
     DRAG_DROP           m_DADFunc;
+
+    // Drop From Outside ( 외부에서부터 Drop이 발생했을 때 )
+    UI*                 m_pDCheckInst;
+    DROPCHECK           m_DCheckFunc;
 
     // Key Binding Delegate
     vector<tTreeKey>    m_vecKeyBind;
@@ -93,7 +100,9 @@ public:
     virtual void update() override;
     virtual void render_update() override;
 
-public:    
+    virtual void DropCheck() override;
+
+public:   
     void ShowDummyRoot(bool _bTrue){m_bShowDummy = _bTrue;}
     void UseFrame(bool _b) { m_bUseFrame = _b; }
     void UseDragDropOuter(bool _b) { m_bUseDragDropOuter = _b; }
@@ -101,9 +110,14 @@ public:
     TreeNode* AddTreeNode(TreeNode* _pParentNode, const string& _strName, DWORD_PTR _dwData = 0);
     TreeNode* GetDummyNode() { return m_pRootNode; }
 
+    TreeNode* GetDragNodeforOther() { return m_pDragNodeforOther; }
+    void SetDragNodeforOther(TreeNode* _pNode) { m_pDragNodeforOther = _pNode; }
+
+
     void SetClickedDelegate(UI* _pInst, CLICKED _Func){m_pCInst = _pInst; m_CFunc = _Func;}
     void SetDoubleClickedDelegate(UI* _pInst, CLICKED _Func){m_pDBCInst = _pInst;m_DBCFunc = _Func;}
     void SetDragAndDropDelegate(UI* _pInst, DRAG_DROP _Func){m_pDADInst = _pInst;m_DADFunc = _Func;}
+    void SetDropCheckDelegate(UI* _pInst, DROPCHECK _Func) { m_pDCheckInst = _pInst;  m_DCheckFunc = _Func; }
     void SetKeyBinding(KEY _eKey, UI* _pInst, KEY_FUNC _Func);
 
     void Clear();

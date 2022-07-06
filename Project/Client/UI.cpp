@@ -104,7 +104,10 @@ void UI::render()
 			}
 
 			ImGui::EndChild();
-		}		
+		}
+
+		// Drop Check
+		DropCheck();
 	}
 }
 

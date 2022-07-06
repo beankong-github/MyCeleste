@@ -8,10 +8,10 @@
 
 #include <Engine/CEventMgr.h>
 
-#include "TreeUI.h"
 #include "CImGuiMgr.h"
+#include "TreeUI.h"
 #include "InspectorUI.h"
-
+#include "ResourceUI.h"
 
 SceneOutliner::SceneOutliner()
 	: UI("SceneOutliner")
@@ -35,6 +35,8 @@ SceneOutliner::SceneOutliner()
 	// Key Delegate 등록
 	m_TreeUI->SetKeyBinding(KEY::DEL, this, (CLICKED)&SceneOutliner::OnPressDelete);
 	
+	// 외부UI로부터 Drop 체크 Delegate 등록
+	m_TreeUI->SetDropCheckDelegate(this, (DROPCHECK)&SceneOutliner::DropCheckDelegate);
 
 	Reset();
 }
@@ -133,7 +135,6 @@ void SceneOutliner::OnPressDelete(DWORD_PTR _dw)
 	pTargetObj->Destroy();
 
 	// InspectorUI 를 찾아서 Object 를 nullptr 로 세팅한다.
-		
 	InspectorUI* pInspectorUI = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
 	pInspectorUI->SetTargetObject(nullptr);
 }
@@ -147,6 +148,7 @@ void SceneOutliner::DragAndDropDelegate(DWORD_PTR _dwDrag, DWORD_PTR _dwDrop)
 	// 드롭 목적지가 제대로 들어 온 경우
 	if (nullptr != pDropTargetObject)
 	{
+		// 같은 오브젝트에 드롭했거나 현재 오브젝트의 부모에 드롭했다면 실행 x
 		if (pChildObject == pDropTargetObject
 			|| pDropTargetObject->IsAncestor(pChildObject))
 		{
@@ -166,5 +168,46 @@ void SceneOutliner::DragAndDropDelegate(DWORD_PTR _dwDrag, DWORD_PTR _dwDrop)
 		}
 
 		CSceneMgr::GetInst()->DisconnectParent(pChildObject);		
+	}
+}
+
+bool SceneOutliner::DropCheckDelegate()
+{
+	// Resource -> SceneOuliner
+	if (ImGui::BeginDragDropTarget())
+	{
+		DWORD_PTR dwData = 0;
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Resource"))
+		{
+			memcpy(&dwData, payload->Data, sizeof(DWORD_PTR));
+			ResDrop(dwData);
+		}
+
+		ImGui::EndDragDropTarget();
+
+		return (dwData != NULL);
+	}
+}
+
+void SceneOutliner::ResDrop(DWORD_PTR _resPtr)
+{
+	ResourceUI* pResUI = (ResourceUI*) CImGuiMgr::GetInst()->FindUI("Resource");
+	assert(pResUI);
+
+	TreeNode* node = pResUI->GetTreeUI()->GetDragNodeforOther();
+	if (node != nullptr)
+	{
+		wstring name = wstring(node->GetName().begin(), node->GetName().end());
+		CPrefab* pPref = (CPrefab*)CResMgr::GetInst()->FindRes<CPrefab>(name).Get();
+		
+		tEventInfo info = {};
+
+		info.eType = EVENT_TYPE::CREATE_OBJ;
+		info.lParam = (DWORD_PTR)pPref->Instantiate();
+		info.wParam = (DWORD_PTR)1;
+
+		CEventMgr::GetInst()->AddEvent(info);
+
+		pResUI->GetTreeUI()->SetDragNodeforOther(nullptr);
 	}
 }

@@ -101,62 +101,41 @@ void MenuUI::render_update()
                 available = false;
             }
 
-            if (ImGui::MenuItem("Camera", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::CAMERA))
-                {
-                    pTarget->AddComponent(new CCamera);
-                    pTarget->Camera()->CheckLayerMaskAll();
-                }
-            }
-            if (ImGui::MenuItem("Collider2D", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::COLLIDER2D))
-                {
-                    pTarget->AddComponent(new CCollider2D);
-                }
-            }
-            //ImGui::MenuItem("Collider3D", NULL, false, available);
-            
-            if (ImGui::MenuItem("Animator2D", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::ANIMATOR2D))
-                {
-                    pTarget->AddComponent(new CAnimator2D);
-                }
-            }
-            //ImGui::MenuItem("Animator3D", NULL, false, available);
-            
-            if (ImGui::MenuItem("LIGHT2D", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::LIGHT2D))
-                {
-                    pTarget->AddComponent(new CLight2D);
-                }
-            }
-            //ImGui::MenuItem("LIGHT3D", NULL, false, available);
-            
-            if (ImGui::MenuItem("MeshRender", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::MESHRENDER))
-                {
-                    pTarget->AddComponent(new CMeshRender);
-                }
-            }
-            if (ImGui::MenuItem("TileMap", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::TILEMAP))
-                {
-                    pTarget->AddComponent(new CTileMap);
-                }
-            }
-            if (ImGui::MenuItem("ParticleSystem", NULL, false, available))
-            {
-                if (nullptr == pTarget->GetComponent(COMPONENT_TYPE::PARTICLESYSTEM))
-                {
-                    pTarget->AddComponent(new CParticleSystem);
-                }
-            }
+			if (ImGui::MenuItem("Camera", NULL, false, available))
+			{
+				AddComponent(pTarget, COMPONENT_TYPE::CAMERA);
+				pTarget->Camera()->CheckLayerMaskAll();
+			}
+			if (ImGui::MenuItem("Collider2D", NULL, false, available))
+			{
+				AddComponent(pTarget, COMPONENT_TYPE::COLLIDER2D);
+			}
+			//ImGui::MenuItem("Collider3D", NULL, false, available);
+
+			if (ImGui::MenuItem("Animator2D", NULL, false, available))
+			{
+				AddComponent(pTarget, COMPONENT_TYPE::ANIMATOR2D);
+			}
+			//ImGui::MenuItem("Animator3D", NULL, false, available);
+
+			if (ImGui::MenuItem("LIGHT2D", NULL, false, available))
+			{
+				AddComponent(pTarget, COMPONENT_TYPE::LIGHT2D);
+			}
+			//ImGui::MenuItem("LIGHT3D", NULL, false, available);
+
+			if (ImGui::MenuItem("MeshRender", NULL, false, available))
+			{
+				AddComponent(pTarget, COMPONENT_TYPE::MESHRENDER);
+			}
+			if (ImGui::MenuItem("TileMap", NULL, false, available))
+			{
+                AddComponent(pTarget, COMPONENT_TYPE::TILEMAP);
+			}
+			if (ImGui::MenuItem("ParticleSystem", NULL, false, available))
+			{
+                AddComponent(pTarget, COMPONENT_TYPE::PARTICLESYSTEM);
+		}
             //ImGui::MenuItem("LandScape",NULL, false, available);
             //ImGui::MenuItem("Decal",NULL, false, available);
             
@@ -329,3 +308,58 @@ void MenuUI::Task()
         }
     }
 }
+
+void MenuUI::AddComponent(CGameObject* _pTarget, COMPONENT_TYPE _type)
+{
+    assert(_pTarget);
+
+    CComponent* pCom = _pTarget->GetComponent(_type);
+    if (nullptr == pCom)
+    {
+        switch (_type)
+        {
+        case COMPONENT_TYPE::CAMERA:
+            _pTarget->AddComponent(new CCamera);
+            break;
+        case COMPONENT_TYPE::COLLIDER2D:
+            _pTarget->AddComponent(new CCollider2D);
+            break;
+        case COMPONENT_TYPE::COLLIDER3D:
+            break;
+        case COMPONENT_TYPE::ANIMATOR2D:
+            _pTarget->AddComponent(new CAnimator2D);
+            break;
+        case COMPONENT_TYPE::ANIMATOR3D:
+            break;
+        case COMPONENT_TYPE::LIGHT2D:
+            _pTarget->AddComponent(new CLight2D);
+            break;
+        case COMPONENT_TYPE::LIGHT3D:
+            break;
+        case COMPONENT_TYPE::BOUNDINGBOX:
+            break;
+        case COMPONENT_TYPE::MESHRENDER:
+            _pTarget->AddComponent(new CMeshRender);
+            break;
+        case COMPONENT_TYPE::TILEMAP:
+            _pTarget->AddComponent(new CTileMap);
+            break;
+        case COMPONENT_TYPE::PARTICLESYSTEM:
+            _pTarget->AddComponent(new CParticleSystem);
+            break;
+        case COMPONENT_TYPE::LANDSCAPE:
+            break;
+        case COMPONENT_TYPE::DECAL:
+            break;
+        default:
+            break;
+        }
+    }
+
+    InspectorUI* pInspector = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
+    if (nullptr != pInspector)
+    {
+        pInspector->SetTargetObject(_pTarget);
+    }
+}
+

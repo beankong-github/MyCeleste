@@ -22,6 +22,7 @@ public:
 
 private:
     void Task();
+    void AddComponent(CGameObject* _pTarge, COMPONENT_TYPE _type);
 
 public:
     MenuUI();

@@ -29,7 +29,7 @@ void CTestScene::CreateTestScene()
 	CScene* pCurScene = new CScene;
 	CSceneMgr::GetInst()->ChangeScene(pCurScene);
 
-	return;
+	//return;
 
 	pCurScene->SetLayerName(0, L"Tile");
 	pCurScene->SetLayerName(1, L"Default");

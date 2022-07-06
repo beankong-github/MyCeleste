@@ -88,13 +88,13 @@ InspectorUI::~InspectorUI()
 
 void InspectorUI::update()
 {
-	if (KEY_TAP(KEY::I))
-	{
-		if (IsActive())
-			Deactivate();
-		else
-			Activate();
-	}
+	//if (KEY_TAP(KEY::I))
+	//{
+	//	if (IsActive())
+	//		Deactivate();
+	//	else
+	//		Activate();
+	//}
 }
 
 void InspectorUI::render_update()

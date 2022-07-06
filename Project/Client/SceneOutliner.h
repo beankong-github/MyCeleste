@@ -18,12 +18,16 @@ public:
 public:
     void Reset();
 
-    void AddGameObjectToTree(CGameObject* _pObject, TreeNode* _pDestNode);
-    void OnRightClicked();
+    TreeUI* GetTreeUI() { return m_TreeUI; }
     
+    void AddGameObjectToTree(CGameObject* _pObject, TreeNode* _pDestNode);
+    
+    void OnRightClicked();
     void OnObjectNodeClicked(DWORD_PTR _dw);
     void OnPressDelete(DWORD_PTR _dw);
     void DragAndDropDelegate(DWORD_PTR _dwDrag, DWORD_PTR _dwDrop);
+    bool DropCheckDelegate();
+    void ResDrop(DWORD_PTR _resPtr);
 
 public:
     SceneOutliner();

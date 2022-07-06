@@ -20,6 +20,7 @@ ResourceUI::ResourceUI()
 	m_TreeUI->SetTitle("Resource");
 	m_TreeUI->UseFrame(true);
 	m_TreeUI->UseDragDropOuter(true);
+	m_TreeUI->UseDragDropSelf(true);
 
 	AddChild(m_TreeUI);
 
@@ -27,6 +28,8 @@ ResourceUI::ResourceUI()
 	m_TreeUI->SetClickedDelegate(this, (CLICKED)&ResourceUI::ItemClicked);
 	// Double Clicked Delegate 등록
 	m_TreeUI->SetDoubleClickedDelegate(this, (CLICKED)&ResourceUI::ItemDoubleClicked);
+	// Drag Drop Delegate 등록
+	m_TreeUI->SetDragAndDropDelegate(this, (DRAG_DROP)&ResourceUI::DragAndDropDelegate);
 
 	Reset();
 }
@@ -179,7 +182,7 @@ void ResourceUI::FindFileName(const wstring& _strFolderPath)
 	while (FindNextFile(hFind, &FindFileData))
 	{
 		// 찾은 데이터가 디렉토리(폴더)인 경우
-		if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			// 디렉토리명이 ..인 경우 넘어간다 
 			if (0 == wcscmp(FindFileData.cFileName, L".."))
@@ -190,13 +193,13 @@ void ResourceUI::FindFileName(const wstring& _strFolderPath)
 			continue;
 		}
 
-
 		// 찾은 데이터가 파일인 경우,
 		// 해당 파일의 상대 경로를 m_vecResPath에 담아준다 
 		wstring strRelativePath = _strFolderPath + FindFileData.cFileName;
 		strRelativePath = CPathMgr::GetInst()->GetRelativePath(strRelativePath);
 
 		m_vecResPath.push_back(strRelativePath);
+
 	}
 
 	// 파일 검색 핸들을 닫는다
@@ -217,7 +220,7 @@ void ResourceUI::ItemClicked(DWORD_PTR _dwNode)
 	// InspectorUI 를 얻어옴
 	InspectorUI* pInspectorUI = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
 	pInspectorUI->SetTargetResource(pResource);
-}
+} 
 
 void ResourceUI::ItemDoubleClicked(DWORD_PTR _dwNode)
 {
@@ -242,6 +245,41 @@ void ResourceUI::ItemDoubleClicked(DWORD_PTR _dwNode)
 	// 로드한 씬을 현재 씬으로 지정
 	CScene* pNewScene = CSceneSaveLoad::LoadScene(strFilePath);
 	CSceneMgr::GetInst()->ChangeScene(pNewScene);
+}
+
+void ResourceUI::DragAndDropDelegate(DWORD_PTR _dwDrag, DWORD_PTR _dwDrop)
+{
+	// Prefab -> SceneOutliner
+	//CPrefab* pPref = (CPrefab*) CResMgr::GetInst()->FindRes<CPrefab>(wstring(m_TreeUI->GetDragNode()->GetName().begin(), m_TreeUI->GetDragNode()->GetName().end())).Get();
+	//if (nullptr != pPref)
+	//{
+	//	tEventInfo info = {};
+
+	//	info.eType = EVENT_TYPE::CREATE_OBJ;
+	//	info.lParam = (DWORD_PTR)pPref->Instantiate();
+	//	info.wParam = (DWORD_PTR)1;
+
+	//	CEventMgr::GetInst()->AddEvent(info);
+	//}
+
+	// SceneOutliner -> Resource
+	//CGameObject* pObject = (CGameObject*)_dwDrag;
+	//TreeNode* pDropTargetObject = m_TreeUI->GetDropNode();
+	//
+	//// 드롭 목적지
+	//if (nullptr != pDropTargetObject)
+	//{
+	//	if (m_TreeUI->GetDummyNode() == pDropTargetObject->GetParent() &&
+	//		"PREFAB" == pDropTargetObject->GetName())
+	//	{
+	//		CPrefab* pPrf = new CPrefab;
+	//		pPrf->SetProto(pObject->Clone());
+	//		wstring name = L"prefab\\" + pObject->GetName() + L".pref";
+	//		CResMgr::GetInst()->AddRes<CPrefab>(name, pPrf, false);
+
+	//		Renew();
+	//	}
+	//}
 }
 
 RES_TYPE ResourceUI::GetResTypeFromExt(const wstring& _strExt)

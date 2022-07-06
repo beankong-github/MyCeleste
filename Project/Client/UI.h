@@ -9,14 +9,14 @@ private:
 	const string	m_strName;
 	string			m_strTitle;
 	vector<UI*>		m_vecChildUI;
-	UI*				m_pParentUI;
+	UI* m_pParentUI;
 
 	Vec2			m_vPos;
 	Vec2			m_vSize;
 	bool			m_bOpen;
 	bool			m_bModal;
 
-public:	
+public:
 	const string& GetName() { return m_strName; }
 	void SetSize(Vec2 _vSize) { m_vSize = _vSize; }
 	Vec2 GetSize() { return m_vSize; }
@@ -37,12 +37,23 @@ public:
 		_pChildUI->m_pParentUI = this;
 		m_vecChildUI.push_back(_pChildUI);
 	}
+	UI* FindChild(string _strId)
+	{
+		for (int i = 0; i < m_vecChildUI.size(); i++)
+		{
+			if (_strId == m_vecChildUI[i]->GetName())
+			{
+				return m_vecChildUI[i];
+			}
+		}
+	}
 
 	virtual void Activate() { m_bOpen = true; }
 	virtual void Deactivate() { m_bOpen = false; };
 
 	bool IsActive() { return m_bOpen; }
-		
+
+	virtual void DropCheck() {};
 
 public:
 	virtual void update();

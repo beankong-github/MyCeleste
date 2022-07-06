@@ -118,6 +118,7 @@ const char* ToString(RES_TYPE _type)
 
 std::wstring ToWString(const std::string& str)
 {
+    //wstring wstr(str.begin(), str.end());
     const int    length = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
     std::wstring wstr{};
     wstr.resize(length);

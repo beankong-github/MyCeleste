@@ -14,7 +14,8 @@ public:
     virtual void render_update() override;
 
 public:
-    void Reset();
+    void Reset();    
+    TreeUI* GetTreeUI() { return m_TreeUI; }
 
 private:
     void Reload();                                      // content 폴더에 변경점이 감지되면 리소스를 다시 로드한다. 
@@ -23,6 +24,9 @@ private:
 
     void ItemClicked(DWORD_PTR _dwNode);                // 리소스 클릭시 호출
     void ItemDoubleClicked(DWORD_PTR _dwNode);          // 리소스 더블 클릭시 호출
+
+
+    void DragAndDropDelegate(DWORD_PTR _dwDrag, DWORD_PTR _dwDrop); // DragDrop
 
     RES_TYPE GetResTypeFromExt(const wstring& _strExt); // 파일 확장자로 리소스의 종류를 알아낸다.
 

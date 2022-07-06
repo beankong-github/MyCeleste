@@ -11,7 +11,7 @@ class CLight2D;
 class CCamera;
 
 class CMeshRender;
-class CTimeMap;
+class CTileMap;
 class CParticleSystem;
 class CScript;
 class CRenderComponent;

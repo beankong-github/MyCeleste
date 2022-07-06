@@ -36,7 +36,16 @@ CTileMap::CTileMap(const CTileMap& _origin)
 	, m_pBuffer(nullptr)
 	, m_bBufferUpdated(false)
 {
+
+	// 메쉬, 재질, 아틀라스 설정
+	SetMesh(CResMgr::GetInst()->FindRes<CMesh>(L"RectMesh"));
+	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"material\\TileMapMtrl.mtrl"));
+	m_pAtlasTex = CResMgr::GetInst()->FindRes<CTexture>(_origin.m_pAtlasTex.Get()->GetKey());
+
+	// 구조화 버퍼 설정
+	m_vecTileData.resize((size_t)(m_iTileCountX * m_iTileCountY));
 	m_pBuffer = new CStructuredBuffer;
+	ClearTileData();
 }
 
 CTileMap::~CTileMap()

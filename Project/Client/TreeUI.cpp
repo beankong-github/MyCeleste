@@ -82,9 +82,10 @@ void TreeNode::render_update()
 				ImGui::EndDragDropSource();
 
 				m_pTreeUI->m_pDragNode = this;
+				m_pTreeUI->m_pDragNodeforOther = this;
 			}
 
-			// 내부 드롭을 허용한 경우에만 드롭체크
+			// 내부 드롭을 허용한 경우에 드롭이 발생했는지 체크한다.
 			if (m_pTreeUI->m_bUseDragDropSelf)
 			{
 				if (ImGui::BeginDragDropTarget())
@@ -125,6 +126,7 @@ TreeUI::TreeUI(bool _bDummyRoot)
 	, m_pSelectedNode(nullptr)
 	, m_pDragNode(nullptr)
 	, m_pDropNode(nullptr)
+	, m_pDragNodeforOther(nullptr)
 	, m_bUseDummyRoot(_bDummyRoot)
 	, m_bShowDummy(false)	
 	, m_bUseFrame(false)
@@ -191,7 +193,7 @@ void TreeUI::render_update()
 		m_pRootNode->render_update();
 	}
 
-	// Drag Drop Check
+	// Drop이 발생했을 때 Drag로 등록된 노드와 Drop으로 등록된 노드를 인자로 함수 포인터를 호출한다.
 	if ( (m_pDragNode && m_pDropNode)
 		|| m_pDragNode && KEY_AWAY(KEY::LBTN))
 	{
@@ -212,7 +214,6 @@ void TreeUI::render_update()
 	}
 
 
-
 	// KeyBinding 호출
 	if (ImGui::IsWindowFocused())
 	{
@@ -224,6 +225,13 @@ void TreeUI::render_update()
 			}
 		}
 	}
+}
+
+void TreeUI::DropCheck()
+{
+	// 외부(특정 UI)에서 발생한 드롭이 있는지 체크한다
+	if (m_pDCheckInst && m_DCheckFunc)
+		m_bIsDropFromOuter = (m_pDCheckInst->*m_DCheckFunc)();
 }
 
 TreeNode* TreeUI::AddTreeNode(TreeNode* _pParentNode, const string& _strName, DWORD_PTR _dwData)
