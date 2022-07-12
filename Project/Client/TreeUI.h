@@ -63,6 +63,7 @@ class TreeUI :
 private:
     TreeNode*           m_pRootNode;
     TreeNode*           m_pSelectedNode;
+    TreeNode*           m_pRightClickedNode;
     TreeNode*           m_pDragNodeforOther;
     TreeNode*           m_pDragNode;
     TreeNode*           m_pDropNode;
@@ -80,6 +81,10 @@ private:
     // Clicked Delegate
     UI*                 m_pCInst;
     CLICKED             m_CFunc;
+
+    // Clicked Delegate
+    UI*                 m_pRCInst;
+    CLICKED             m_RCFunc;
 
     // Double Clicked
     UI*                 m_pDBCInst;
@@ -115,6 +120,7 @@ public:
 
 
     void SetClickedDelegate(UI* _pInst, CLICKED _Func){m_pCInst = _pInst; m_CFunc = _Func;}
+    void SetRightClickedDelegate(UI* _pInst, CLICKED _Func){m_pRCInst = _pInst; m_RCFunc = _Func;}
     void SetDoubleClickedDelegate(UI* _pInst, CLICKED _Func){m_pDBCInst = _pInst;m_DBCFunc = _Func;}
     void SetDragAndDropDelegate(UI* _pInst, DRAG_DROP _Func){m_pDADInst = _pInst;m_DADFunc = _Func;}
     void SetDropCheckDelegate(UI* _pInst, DROPCHECK _Func) { m_pDCheckInst = _pInst;  m_DCheckFunc = _Func; }
@@ -124,6 +130,7 @@ public:
 
 private:
     void SetSelectedNode(TreeNode* _pNode);
+    void SetRightClickedNode(TreeNode* _pNode);
     void SetDoubleClickedNode(TreeNode* _pNode);
    
 

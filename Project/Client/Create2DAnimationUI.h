@@ -24,9 +24,9 @@ struct Preview_Info
 class Create2DAnimationUI : public UI
 {
 private:
-	CGameObject* m_pTargetObj; 
-	CTexture*    m_pTex;
-	Vec2         m_vTexResolution;
+	CGameObject*	m_pTargetObj; 
+	CTexture*		m_pAtlasTex;
+	Vec2			m_vTexResolution;
 
 	string       m_animName;
 	int          m_iRepeatSaveCount;    //반복저장 회수
@@ -66,6 +66,7 @@ private:
 	vector<tAnim2DFrame> m_vecAnim2DInfo;
 	vector<Preview_Info> m_vecPreviewInfo;
 	float			     m_fDuration;
+	wstring				 m_strSpriteKey;
 
 	//리스트목록 전달 딜리게이트
 	UI*            m_Inst;
@@ -83,13 +84,17 @@ public:
 	}
 
 private:
-
+	void CreateAnimation(wstring name);
 	ImVec2 V2ToImV2(Vec2& _vec2);
 	void F2ToV2(Vec2& _vec2, float* _f2) { _vec2.x = _f2[0]; _vec2.y = _f2[1]; }
 	ImVec2 ImV2XInt(ImVec2 _imvec2, int _i) { _imvec2.x *= _i; _imvec2.y *= _i; return _imvec2; }
 	void VecClearFunc();
 	void FloatReset();
 	void SetCheckDummy(Preview_Info& _preview);
+
+private:
+	void TextureSelect(DWORD_PTR _param);
+	void SpriteKeySelect(DWORD_PTR _param);
 
 public:
 	virtual void update() override;

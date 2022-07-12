@@ -48,6 +48,7 @@ enum class RES_TYPE
 	TEXTURE,
 	SOUND,	
 	SCENEFILE,
+	XMLData,
 	END,
 };
 
@@ -57,8 +58,8 @@ enum class CB_TYPE
 	SCALAR_PARAM,	// b1
 	ANIM2D,			// b2
 	GLOBAL,			// b3
-
-	//GLOBAL,			// b3
+	TEXTUREINFO,	// b4
+	
 	END,
 };
 

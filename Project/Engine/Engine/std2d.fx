@@ -60,7 +60,16 @@ float4 PS_Std2D(VTX_OUT _in) : SV_Target
         //if(IsBind(g_tex_0))
         if(g_btex_0)
         {
-            vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV);
+            float2 vUV = _in.vUV * s_vSize;
+            vUV = vUV + s_vPos;
+            
+            if (vUV.x < s_vPos.x || s_vPos.x + s_vSize.x < vUV.x
+            || vUV.y < s_vPos.y || s_vPos.y + s_vSize.y < vUV.y)
+            {
+                discard;
+            }
+            
+            vOutColor = g_tex_0.Sample(g_sam_0, vUV);
         }
         else
         {
@@ -94,6 +103,7 @@ VTX_OUT VS_Std2DAlpha(VTX_IN _in)
     
     output.vPosition = mul(float4(_in.vPos, 1.f), g_matWVP);
     output.vUV = _in.vUV;
+    output.vWorldPos = mul(float4(_in.vPos, 1.f), g_matWorld).xyz;
     
     return output;
 }
@@ -102,8 +112,52 @@ float4 PS_Std2DAlpha(VTX_OUT _in) : SV_Target
 {
     float4 vOutColor = (float4) 0.f;
     
-    vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV);
-       
+    // Animation 정보가 있는 경우
+    if (g_useAnim2D)
+    {
+        float2 vUV = _in.vUV * g_vSlice; // * g_vBackgroundSize;
+        vUV = vUV + g_vLT; //        -(g_vBackgroundSize - g_vSlice) / 2.f + g_vLT - g_vOffset;
+        
+        if (vUV.x < g_vLT.x || g_vLT.x + g_vSlice.x < vUV.x
+            || vUV.y < g_vLT.y || g_vLT.y + g_vSlice.y < vUV.y)
+        {
+            discard;
+        }
+                
+        vOutColor = g_Atlas.Sample(g_sam_1, vUV);
+    }
+    else
+    {
+        if (g_btex_0)
+        {
+            float2 vUV = _in.vUV * s_vSize;
+            vUV = vUV + s_vPos;
+            
+            if (vUV.x < s_vPos.x || s_vPos.x + s_vSize.x < vUV.x
+            || vUV.y < s_vPos.y || s_vPos.y + s_vSize.y < vUV.y)
+            {
+                discard;
+            }
+            
+            vOutColor = g_tex_0.Sample(g_sam_0, vUV);
+        }
+        else
+        {
+            vOutColor = float4(1.f, 0.f, 1.f, 1.f);
+        }
+    }
+    
+    if (vOutColor.a <= 0.f)
+    {
+        discard;
+    }
+      
+    // 광원에 따른 빛 계산    
+    float3 vLightColor = CalculateLight2D(_in.vWorldPos);
+    
+    // 빛 적용
+    vOutColor.rgb *= vLightColor.rgb;
+    
     return vOutColor;
 }
 

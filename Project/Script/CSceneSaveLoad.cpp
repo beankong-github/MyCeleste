@@ -148,7 +148,7 @@ CScene* CSceneSaveLoad::LoadScene(const wstring& _strSceneFilePath)
     }
 
     // ==================
-    //     Open File
+    //     Close File
     // ==================
     fclose(pFile);
 
@@ -202,6 +202,9 @@ void CSceneSaveLoad::SavePrefab(CPrefab* _Prefab, const wstring& _strFilePath)
 {
     FILE* pFile = nullptr;
     _wfopen_s(&pFile, _strFilePath.c_str(), L"wb");
+    
+    if (nullptr == pFile)
+        return;
 
     SaveGameObject(_Prefab->GetProto(), pFile);
 
@@ -217,7 +220,7 @@ int CSceneSaveLoad::LoadPrefab(CPrefab* _Prefab, const wstring& _strFilePath)
         return E_FAIL;
 
     // 프리팹에 프로토타입이 없을 경우 로드한 GameObject를 Proto로 설정해준다.
-    if (nullptr != _Prefab->GetProto())
+    if (nullptr == _Prefab->GetProto())
     {
         CGameObject* pProto = LoadGameObject(pFile);
         _Prefab->SetProto(pProto);

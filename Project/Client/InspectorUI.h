@@ -24,6 +24,7 @@ private:
 
 public:
     CGameObject* GetTargetObject() { return m_pTargetObject; }
+    ComponentUI** GetCompUIArr() { return m_arrComUI; }
 
     void SetTargetObject(CGameObject* _pTarget);
     void SetTargetResource(CRes* _pTargetRes);
@@ -36,6 +37,7 @@ public:
     virtual void render_update() override;
 
 
+    friend class PrefabUI;
 
 
 public:

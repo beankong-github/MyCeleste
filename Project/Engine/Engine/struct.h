@@ -15,11 +15,9 @@ struct Vertex
 	Vec4 vColor;	// »ö»ó
 
 	Vec2 vUV;
-
 };
 
 typedef Vertex Vtx;
-
 
 
 // =======
@@ -136,8 +134,7 @@ struct tAnim2D
 	int     useAnim2D;
 	float   Atlas_Width;
 	float   Atlas_Height;
-	bool	useDummyAnim;
-	bool	Anim2D_Padding[3];
+	float	useDummyAnim;
 };
 
 struct tGlobal
@@ -148,4 +145,10 @@ struct tGlobal
 	float	fAccTime;	
 	int		Light2DCount;
 	int     Light3DCount;
+};
+
+struct tSprite
+{
+	Vec2	vPos;
+	Vec2	vSize;
 };

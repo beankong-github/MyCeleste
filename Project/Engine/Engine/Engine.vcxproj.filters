@@ -151,6 +151,9 @@
     <ClInclude Include="CMgrScript.h">
       <Filter>Engine\05. Component\15. Script\MgrScript</Filter>
     </ClInclude>
+    <ClInclude Include="CXMLData.h">
+      <Filter>Engine\07. Resource\09. XMLData</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -285,6 +288,9 @@
     </ClCompile>
     <ClCompile Include="CLight2D.cpp">
       <Filter>Engine\05. Component\07. Light2D</Filter>
+    </ClCompile>
+    <ClCompile Include="CXMLData.cpp">
+      <Filter>Engine\07. Resource\09. XMLData</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -455,6 +461,9 @@
     </Filter>
     <Filter Include="Engine\05. Component\15. Script\MgrScript">
       <UniqueIdentifier>{cea679a7-8ed9-4d05-913f-3356115077e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Resource\09. XMLData">
+      <UniqueIdentifier>{987119ae-e420-42ec-9fef-dccea9ccde60}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

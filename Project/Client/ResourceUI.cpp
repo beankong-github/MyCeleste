@@ -16,20 +16,24 @@
 ResourceUI::ResourceUI()
 	: UI("Resource")
 {
-	m_TreeUI = new TreeUI(true);
-	m_TreeUI->SetTitle("Resource");
-	m_TreeUI->UseFrame(true);
-	m_TreeUI->UseDragDropOuter(true);
-	m_TreeUI->UseDragDropSelf(true);
+	m_pTreeUI = new TreeUI(true);
+	m_pTreeUI->SetTitle("Resource");
+	m_pTreeUI->UseFrame(true);
+	m_pTreeUI->UseDragDropOuter(true);
+	m_pTreeUI->UseDragDropSelf(true);
 
-	AddChild(m_TreeUI);
+	AddChild(m_pTreeUI);
 
 	// Clicked Delegate 등록
-	m_TreeUI->SetClickedDelegate(this, (CLICKED)&ResourceUI::ItemClicked);
+	m_pTreeUI->SetClickedDelegate(this, (CLICKED)&ResourceUI::ItemClicked);
+
+	// Right Delegate 등록
+	m_pTreeUI->SetRightClickedDelegate(this, (CLICKED)&ResourceUI::ItemRightClicked);
+
 	// Double Clicked Delegate 등록
-	m_TreeUI->SetDoubleClickedDelegate(this, (CLICKED)&ResourceUI::ItemDoubleClicked);
+	m_pTreeUI->SetDoubleClickedDelegate(this, (CLICKED)&ResourceUI::ItemDoubleClicked);
 	// Drag Drop Delegate 등록
-	m_TreeUI->SetDragAndDropDelegate(this, (DRAG_DROP)&ResourceUI::DragAndDropDelegate);
+	m_pTreeUI->SetDragAndDropDelegate(this, (DRAG_DROP)&ResourceUI::DragAndDropDelegate);
 
 	Reset();
 }
@@ -54,6 +58,40 @@ void ResourceUI::render_update()
 	if (CEventMgr::GetInst()->HasOccurObjEvent())
 	{
 		Renew();
+	}
+
+	// ========
+	//	Toggle
+	// ========
+	if (m_bToggleOn)
+	{
+		// 키 검사
+		if (KEY_TAP(KEY::ESC))
+		{
+			m_bToggleOn = false;
+			return;
+		}
+
+		// PopUp Open
+		ImGui::OpenPopup("##Popup Toggle");
+	}
+	if (ImGui::BeginPopup("##Popup Toggle"))
+	{
+		if (ImGui::MenuItem("Delete"))
+		{
+			tEventInfo info = {};
+
+			info.eType = EVENT_TYPE::DELETE_RES;
+			info.lParam = (DWORD_PTR)m_pRClickedRes;
+			CEventMgr::GetInst()->AddEvent(info);
+
+			Reset();
+
+			m_pRClickedRes = nullptr;
+			m_bToggleOn = false;
+		}
+
+		ImGui::EndPopup();
 	}
 }
 
@@ -101,6 +139,9 @@ void ResourceUI::Reload()
 		case RES_TYPE::SCENEFILE:
 			CResMgr::GetInst()->Load<CSceneFile>(m_vecResPath[i], m_vecResPath[i]);
 			break;
+		case RES_TYPE::XMLData:
+			CResMgr::GetInst()->Load<CXMLData>(m_vecResPath[i], m_vecResPath[i]);
+			break;
 		}
 	}
 
@@ -143,20 +184,20 @@ void ResourceUI::Reload()
 
 void ResourceUI::Renew()
 {
-	m_TreeUI->Clear();
+	m_pTreeUI->Clear();
 
 	// 리소스를 Tree 에 표시
 	for (int i = 0; i < (int)RES_TYPE::END; ++i)
 	{
 		// TreeUI 가 DummyRoot 를 사용하기 때문에, 리소스 항목 노드들은 더미 자식으로 들어감
-		TreeNode* pResNode = m_TreeUI->AddTreeNode(nullptr, ToString((RES_TYPE)i));
+		TreeNode* pResNode = m_pTreeUI->AddTreeNode(nullptr, ToString((RES_TYPE)i));
 
 		const map<wstring, CRes*>& mapRes = CResMgr::GetInst()->GetResList((RES_TYPE)i);
 
 		for (const auto& pair : mapRes)
 		{
 			// 각 리소스 노드들은 해당 리소스 항목 자식으로 들어감
-			m_TreeUI->AddTreeNode(pResNode, string(pair.first.begin(), pair.first.end()), (DWORD_PTR)pair.second);
+			m_pTreeUI->AddTreeNode(pResNode, string(pair.first.begin(), pair.first.end()), (DWORD_PTR)pair.second);
 		}
 	}
 }
@@ -220,7 +261,22 @@ void ResourceUI::ItemClicked(DWORD_PTR _dwNode)
 	// InspectorUI 를 얻어옴
 	InspectorUI* pInspectorUI = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
 	pInspectorUI->SetTargetResource(pResource);
-} 
+}
+void ResourceUI::ItemRightClicked(DWORD_PTR _dwNode)
+{
+	TreeNode* pNode = (TreeNode*)_dwNode;
+
+	// 노드에 담긴 리소스 데이터 가져오기
+	m_pRClickedRes = (CRes*)pNode->GetData();
+
+	// 프레임 노드가 눌렸다면 아무일도 없다.
+	if (nullptr == m_pRClickedRes)
+		return;
+
+	// Toggle 켜기
+	m_bToggleOn = true;
+}
+
 
 void ResourceUI::ItemDoubleClicked(DWORD_PTR _dwNode)
 {
@@ -307,6 +363,9 @@ RES_TYPE ResourceUI::GetResTypeFromExt(const wstring& _strExt)
 	
 	else if (L".scene" == strExt)
 		return RES_TYPE::SCENEFILE;
+
+	else if (L".xml" == strExt)
+		return RES_TYPE::XMLData;
 
 	return RES_TYPE::END;
 }

@@ -98,7 +98,6 @@
     <ClCompile Include="Light2DUI.cpp">
       <Filter>ImGui\UI\01. InspectorUI\ComponentUI\07. Light2D</Filter>
     </ClCompile>
-    <ClCompile Include="ToggleUI.cpp" />
     <ClCompile Include="Create2DAnimationUI.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
@@ -113,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="CCameraEx.cpp">
       <Filter>EditorObject</Filter>
+    </ClCompile>
+    <ClCompile Include="PrefabUI.cpp">
+      <Filter>ImGui\UI\01. InspectorUI\ResInfoUI\01. PrefabUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -227,7 +229,6 @@
     <ClInclude Include="Light2DUI.h">
       <Filter>ImGui\UI\01. InspectorUI\ComponentUI\07. Light2D</Filter>
     </ClInclude>
-    <ClInclude Include="ToggleUI.h" />
     <ClInclude Include="Create2DAnimationUI.h">
       <Filter>ImGui</Filter>
     </ClInclude>
@@ -242,6 +243,9 @@
     </ClInclude>
     <ClInclude Include="CCameraEx.h">
       <Filter>EditorObject</Filter>
+    </ClInclude>
+    <ClInclude Include="PrefabUI.h">
+      <Filter>ImGui\UI\01. InspectorUI\ResInfoUI\01. PrefabUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -352,9 +356,6 @@
     <Filter Include="ImGui\UI\01. InspectorUI\ResInfoUI\07. ShaderUI">
       <UniqueIdentifier>{20cc9d72-1994-4a24-b277-e6d3a9063f80}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ImGui\UI\01. InspectorUI\ResInfoUI\08. SceneFileUI">
-      <UniqueIdentifier>{475f0aa4-37f3-4d51-a13b-6c036505d97b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ImGui\UI\01. InspectorUI\ComponentUI\09. BoundingBox">
       <UniqueIdentifier>{4b791906-806e-4fc6-930e-873cfc10edb8}</UniqueIdentifier>
     </Filter>
@@ -387,6 +388,9 @@
     </Filter>
     <Filter Include="EditorObject\EditorObjectScript">
       <UniqueIdentifier>{7bd78c5c-f38f-43bd-abb0-e88083e7a046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGui\UI\01. InspectorUI\ResInfoUI\07. ShaderUI\08. SceneFileUI">
+      <UniqueIdentifier>{475f0aa4-37f3-4d51-a13b-6c036505d97b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

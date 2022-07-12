@@ -3,7 +3,7 @@
 
 #include "CDevice.h"
 #include "CConstBuffer.h"
-
+#include "CMeshRender.h"
 
 
 CTransform::CTransform()
@@ -12,6 +12,7 @@ CTransform::CTransform()
 	, m_arrRelativeDir{}
 	, m_arrWorldDir{}
 	, m_bIgnoreParentScale(false)
+	, m_bSameRatioWithSprite(true)
 {
 }
 
@@ -21,6 +22,19 @@ CTransform::~CTransform()
 
 void CTransform::finalupdate()
 {
+	if (m_bSameRatioWithSprite)
+	{
+		if (nullptr != MeshRender() && nullptr != MeshRender()->GetTexInfo())
+		{
+			Vec2 Size = MeshRender()->GetTexInfo()->vSize;
+			if (Size.x != 0)
+			{
+				Vec3 relativeSize = Vec3(m_vRelativeScale.x, m_vRelativeScale.x * Size.y / Size.x, m_vRelativeScale.z);
+				SetRelativeScale(relativeSize);
+			}
+		}
+	}
+
 	// 크기 x 회전(자전) x 이동
 	Matrix matScale = XMMatrixScaling(m_vRelativeScale.x, m_vRelativeScale.y, m_vRelativeScale.z);
 	Matrix matTranslation = XMMatrixTranslation(m_vRelativePos.x, m_vRelativePos.y, m_vRelativePos.z);
@@ -91,6 +105,7 @@ void CTransform::SaveToScene(FILE* _pFile)
 	fwrite(&m_vRelativeScale, sizeof(Vec3), 1, _pFile);
 	fwrite(&m_vRelativeRot, sizeof(Vec3), 1, _pFile);
 	fwrite(&m_bIgnoreParentScale, sizeof(bool), 1, _pFile);
+	fwrite(&m_bSameRatioWithSprite, sizeof(bool), 1, _pFile);
 }
 
 void CTransform::LoadFromScene(FILE* _pFile)
@@ -103,6 +118,7 @@ void CTransform::LoadFromScene(FILE* _pFile)
 	fread(&m_vRelativeScale, sizeof(Vec3), 1, _pFile);
 	fread(&m_vRelativeRot, sizeof(Vec3), 1, _pFile);
 	fread(&m_bIgnoreParentScale, sizeof(bool), 1, _pFile);
+	fread(&m_bSameRatioWithSprite, sizeof(bool), 1, _pFile);
 }
 
 Vec3 CTransform::GetWorldScale()
@@ -125,6 +141,10 @@ Vec3 CTransform::GetWorldScale()
 	}
 
 	return vWorldScale;
+}
+
+void CTransform::update()
+{
 }
 
 void CTransform::UpdateData()

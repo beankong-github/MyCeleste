@@ -19,7 +19,7 @@ public:
 	virtual void Deactivate() override;
 
 public:
-	void AddAnimList(DWORD_PTR _param);
+	void UpdateAnimList(DWORD_PTR _param = NULL);
 
 public:
 

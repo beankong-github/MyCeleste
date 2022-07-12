@@ -125,7 +125,7 @@ void CImGuiMgr::progress()
     bool bOpen = true;
     
     // ImGui 데모 윈도우 표시
-    ImGui::ShowDemoWindow(&bOpen);
+    //ImGui::ShowDemoWindow(&bOpen);
 
 
     // Delegate 호출

@@ -14,6 +14,8 @@ public:
 public:
     void MeshSelect(DWORD_PTR _param);
     void MtrlSelect(DWORD_PTR _param);
+    void TextureSelect(DWORD_PTR _param);
+    void SpriteKeySelect(DWORD_PTR _param);
 
 public:
     MeshRenderUI();

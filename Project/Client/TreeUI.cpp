@@ -65,6 +65,12 @@ void TreeNode::render_update()
 			m_pTreeUI->SetSelectedNode(this);
 		}
 
+		// 노드 우클릭 체크
+		if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		{			
+			m_pTreeUI->SetRightClickedNode(this);
+		}
+
 		// 노드 더블 클릭 체크
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 		{
@@ -294,6 +300,25 @@ void TreeUI::SetSelectedNode(TreeNode* _pNode)
 	{
 		(m_pCInst->*m_CFunc)((DWORD_PTR)m_pSelectedNode);
 	}	
+}
+
+void TreeUI::SetRightClickedNode(TreeNode* _pNode)
+{
+	// 이전에 선택된 노드가 있으면 초기화하고 새로 선택된 노드를 등록한다
+	if (nullptr != m_pRightClickedNode)
+	{
+		m_pRightClickedNode->m_bSelected = false;
+	}
+
+	m_pRightClickedNode = _pNode;
+	m_pRightClickedNode->m_bSelected = true;
+
+
+	// 델리게이트 호출
+	if (nullptr != m_pRCInst && nullptr != m_RCFunc)
+	{
+		(m_pRCInst->*m_RCFunc)((DWORD_PTR)m_pRightClickedNode);
+	}
 }
 
 void TreeUI::SetDoubleClickedNode(TreeNode* _pNode)

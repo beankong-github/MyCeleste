@@ -9,6 +9,8 @@
 #include <Engine/CKeyMgr.h>
 #include <Engine/CTimeMgr.h>
 
+#include "ListUI.h"
+#include "CImGuiMgr.h"
 
 Create2DAnimationUI::Create2DAnimationUI() :
 	UI("Create 2D Animation UI"),
@@ -16,10 +18,9 @@ Create2DAnimationUI::Create2DAnimationUI() :
 	m_gridScroll(Vec2(0.f, 0.f)),
 	m_ChangeRectSize(Vec2(0.f, 0.f)),
 	m_vTexResolution(Vec2(0.f, 0.f)),
-	m_pTex(nullptr),
+	m_pAtlasTex(nullptr),
 	m_SampleUV{},
 	m_animName{},
-	m_fImgZoom(0.f),
 	m_fDuration(0.1f),
 	m_fStride(130.f),
 	m_iCheckIdx(0),
@@ -33,8 +34,8 @@ Create2DAnimationUI::Create2DAnimationUI() :
 	m_animName = "Write New 2D Animation Key!";
 	
 	// tmp
-	m_pTex = CResMgr::GetInst()->Load<CTexture>(L"texture\\link_0.png", L"texture\\link_0.png").Get();
-	m_vTexResolution = Vec2(m_pTex->Width() + m_fImgZoom, m_pTex->Height() + m_fImgZoom);
+	m_pAtlasTex = CResMgr::GetInst()->Load<CTexture>(L"texture\\link_0.png", L"texture\\link_0.png").Get();
+	m_vTexResolution = Vec2(m_pAtlasTex->Width() + m_fImgZoom, m_pAtlasTex->Height() + m_fImgZoom);
 }
 
 Create2DAnimationUI::~Create2DAnimationUI()
@@ -60,113 +61,242 @@ void Create2DAnimationUI::render_update()
 	ImGuiIO GetIO = ImGui::GetIO(); //화면 전체 기준으로 한 마우스좌표. 이 값을 static로 하면 변경 X
 
 
-	ImGui::BeginChild("AtlasCanvas##_1", ImVec2(450.f, 450.f), true, ImGuiWindowFlags_NoScrollbar);
+	ImGui::BeginChild("##AtlasCanvas_1", ImVec2(450.f, 450.f), true, ImGuiWindowFlags_NoScrollbar);
 
 
 	ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
 	ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // BeginChild때 설정해준 UI 사이즈.
 	ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
-	const ImVec2 origin(canvas_p0.x, canvas_p0.y);       // Lock scrolled origin
-	//GetIo.MousePos - GetCursorScreenPos = 현재 윈도우창 기준으로 LT가 0,0 RB가 해상도인 마우스 좌표
-	Vec2 mouse_pos_in_canvas(GetIO.MousePos.x - origin.x, GetIO.MousePos.y - origin.y);
 	static bool adding_Rect = false;
 
-	//draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
-	//Atlas 이미지 로드
-	//ImGui::InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
-
-	ImGui::PushID(0);
-	ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.f, 0.0f, 0.0f, 0.f));
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.f, 0.0f, 0.0f, 0.f));
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.f, 0.0f, 0.0f, 0.f));
-	ImGui::ImageButton(m_pTex->GetSRV().Get(), m_vTexResolution, ImVec2(0.f, 0.f), ImVec2(1.f, 1.f), 0);
-	ImGui::PopStyleColor(3);
-	ImGui::PopID();
-
-
-	// Draw grid + all lines in the canvas
-	//draw_list->PushClipRect(canvas_p0, canvas_p1, true);//격자선 깔릴 UI 사이즈
-	//
-	//// =========== 격자선 그리기 =========== //
-	//const float GRID_STEP = 64.0f;
-	//for (float x = fmodf(m_gridScroll.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
-	//	draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));//x축 라인 Add
-	//for (float y = fmodf(m_gridScroll.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
-	//	draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));//y축 라인 Add
-	//// =========== 격자선 그리기 =========== //
-	//
-	//draw_list->PopClipRect();
-
-	// ================================= 마우스 로직 ================================= //
-
-
-	//이미지 우클릭 로직
-	if (ImGui::IsItemHovered() & ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+	// Atals 이미지 선택
+	ImGui::Text("Atlas Texture Key");
+	ImGui::SameLine();
+	ImGui::InputText("##TexKey", (char*)ToString(m_pAtlasTex->GetKey()).c_str(), 256, ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	if (ImGui::Button("##TexKeyListBtn", ImVec2(15, 15)))
 	{
-		m_vScroll.x = ImGui::GetScrollX();
-		m_vScroll.y = ImGui::GetScrollY();
-	}
-
-	//우클릭으로 이미지 클릭하고 드래그 로직	
-	if (ImGui::IsItemHovered() & ImGui::IsMouseDragging(ImGuiMouseButton_Right))
-	{
-		ImGui::SetScrollX((m_vScroll.x - ImGui::GetMouseDragDelta(1).x));
-		ImGui::SetScrollY((m_vScroll.y - ImGui::GetMouseDragDelta(1).y));
-
-		if (m_gridScroll.x >= 0.f && m_gridScroll.x <= ImGui::GetScrollMaxX()) m_gridScroll.x -= ImGui::GetIO().MouseDelta.x;
-		if (m_gridScroll.y >= 0.f && m_gridScroll.y <= ImGui::GetScrollMaxY()) m_gridScroll.y -= ImGui::GetIO().MouseDelta.y;
-	}
-
-	//사각형 영역을 위한 points 정보 추가
-	if (ImGui::IsItemHovered() && !adding_Rect && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-	{
-		points.clear();
-		FloatReset();
-
-		points.push_back(mouse_pos_in_canvas);
-		points.push_back(mouse_pos_in_canvas);
-
-		_vCalculValue = mouse_pos_in_canvas;
-
-		m_SampleUV[0] = (mouse_pos_in_canvas / m_vTexResolution);
-		m_OriginUV[0] = m_SampleUV[0];
-
-		adding_Rect = true;
-	}
-	if (adding_Rect)
-	{
-		points.back() = mouse_pos_in_canvas;
-
-		m_SampleUV[1] = (mouse_pos_in_canvas / m_vTexResolution);
-
-		if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+		// Texture들을 가져온다
+		const map<wstring, CRes*>& mapRes = CResMgr::GetInst()->GetResList(RES_TYPE::TEXTURE);
+		// ListUI 활성화한다.
+		ListUI* pListUI = (ListUI*)CImGuiMgr::GetInst()->FindUI("##ListUI");
+		pListUI->Clear();
+		pListUI->SetTitle("Texture List");
+		// List Item 추가
+		for (const auto& pair : mapRes)
 		{
-			//UV단위
-			m_OriginUV[1] = m_SampleUV[1];
-			m_SampleUV[2].x = m_SampleUV[1].x - m_SampleUV[0].x;
-			m_SampleUV[2].y = m_SampleUV[1].y - m_SampleUV[0].y;
-			if (m_SampleUV[2].x < 0.01f)
+			pListUI->AddList(string(pair.first.begin(), pair.first.end()));
+		}
+		// List 활성화
+		pListUI->Activate();
+		// 더블클릭 이벤트 등록
+		pListUI->SetDBCEvent(this, (DBCLKED)&Create2DAnimationUI::TextureSelect);
+	}
+
+
+	if (ImGui::Button("Create Frames auto"))
+	{
+		if (m_pAtlasTex == nullptr)
+			return;
+
+		if (m_pAtlasTex != nullptr)
+		{
+			// 현재 Atlas에 해당하는 XML 파일이 있는지 확인한다. 
+			wstring xmlKey = m_pAtlasTex->GetKey();
+			size_t pos = xmlKey.find_last_of(L".");
+			assert(pos != xmlKey.npos);
+			xmlKey = xmlKey.substr(0, pos);
+			xmlKey += L".xml";
+
+			// XML Map을 가져온다
+			const map<wstring, CRes*> mapRes = CResMgr::GetInst()->GetResList(RES_TYPE::XMLData);
+
+			// XML이 있다면 해당 XML이 가진 Sprite ID들을 띄워준다
+			map<wstring, CRes*>::const_iterator iter = mapRes.find(xmlKey);
+			if (iter != mapRes.end())
 			{
-				points.clear();
-				FloatReset();
+				CXMLData* data = (CXMLData*)iter->second;
+				const map<wstring, tSprite> sprites = data->GetSpriteDatas();
+
+				for (const auto& pair : sprites)
+				{
+					wstring spriteName = pair.first;
+					size_t pos = spriteName.find_last_of(L".");
+					assert(pos != spriteName.npos);
+					spriteName = spriteName.substr(0, pos - 2);
+
+					static wstring name = spriteName;
+					
+					if (name == spriteName)
+					{
+						const tSprite* sprite = &pair.second;
+						m_SampleUV[0] = sprite->vPos / m_vTexResolution;
+						m_SampleUV[2] = sprite->vSize / m_vTexResolution;
+						m_SampleUV[1] = m_SampleUV[0] + m_SampleUV[2];
+
+						tAnim2DFrame m_t2DFrm = {};
+						m_t2DFrm.vLT = m_SampleUV[0];
+						m_t2DFrm.vBackground = m_SampleUV[2];  //Rect의 RB - LT 해준 값(추출영역의 크기)
+						m_t2DFrm.vSlice = m_SampleUV[2];	   //Rect의 RB - LT 해준 값(추출영역의 크기)
+						m_t2DFrm.fDuration = m_fDuration;
+						m_t2DFrm.vOffset = Vec2(0.f, 0.f);
+						m_vecAnim2DInfo.push_back(m_t2DFrm);
+
+						Preview_Info m_preview = {};
+						m_preview.vOriginSize = ImVec2(m_SampleUV[2].x * m_pAtlasTex->Width(), m_SampleUV[2].y * m_pAtlasTex->Height());
+						m_preview.vSize = m_preview.vOriginSize;
+						m_preview.vOriginLT = V2ToImV2(m_SampleUV[0]);
+						m_preview.vLT = m_preview.vOriginLT;            //LeftTop
+						m_preview.vOriginRB = V2ToImV2(m_SampleUV[1]);
+						m_preview.vRB = m_preview.vOriginRB;            //RightBottom
+						m_preview.vSlice = V2ToImV2(m_SampleUV[2]);     //RightBottom - LeftTop = Rect Size
+						SetCheckDummy(m_preview);
+						m_vecPreviewInfo.push_back(m_preview);
+					}
+
+					// Frame 이름이 달라지면 Save
+					else
+					{
+						CreateAnimation(name);
+						name = spriteName;
+					}
+				}
+
+				wstring spriteName = sprites.rbegin()->first;
+				size_t pos = spriteName.find_last_of(L".");
+				assert(pos != spriteName.npos);
+				spriteName = spriteName.substr(0, pos - 2);
+
+				CreateAnimation(spriteName);
 			}
-			adding_Rect = false;
+		}
+	}
+
+
+	static ImVec2 offset = { 0.f, 0.f };
+	static float zoom = 1;
+
+	// Get the ImGui cursor in screen space
+	ImVec2 display_p0 = ImGui::GetCursorScreenPos();
+	// Get size of the tileset display
+	ImVec2 display_sz = ImGui::GetContentRegionAvail();
+	display_sz.x = (display_sz.x < 50.0f ? 50.0f : display_sz.x);
+	display_sz.y = (display_sz.y < 50.0f ? 50.0f : display_sz.y);
+	ImVec2 display_p1 = ImVec2(display_p0.x + display_sz.x, display_p0.y + display_sz.y);
+	ImVec2 border_p0 = ImVec2(display_p0.x - 1.f, display_p0.y - 1.f);
+	ImVec2 border_p1 = ImVec2(display_p1.x + 1.f, display_p1.y + 1.f);
+
+	// Draw border and background color
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	draw_list->AddRectFilled(display_p0, display_p1, IM_COL32(50, 50, 50, 255));
+	draw_list->AddRect(border_p0, border_p1, IM_COL32(255, 255, 255, 255));
+
+	// Create an invisible button which will catch inputs
+	auto display_rect_flags = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight |
+		ImGuiButtonFlags_MouseButtonMiddle;
+	ImGui::InvisibleButton("display", display_sz, display_rect_flags);
+	const bool is_hovered = ImGui::IsItemHovered();
+	const bool is_active = ImGui::IsItemActive();
+
+	// Calculate origin, then use it to calculate where the mouse cursor is
+	ImGuiIO& io = ImGui::GetIO();
+	const ImVec2 origin(display_p0.x + offset.x, display_p0.y + offset.y);
+	const ImVec2 mouse_pos_in_display(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
+
+	// Pan the tileset display
+	if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.0f)) {
+		offset.x += io.MouseDelta.x;
+		offset.y += io.MouseDelta.y;
+	}
+	// Zoom into tileset display
+	if (is_hovered) {
+		// Minimum zoom = x0.1 (near camera limit)
+		// Maximum zoom = x5.0 (it can fit an image with 1600px width)
+		zoom = zoom - (io.MouseWheel * 0.3f);
+		if (zoom < 0.1f)
+			zoom = 0.1f;
+		else if (zoom > 5.0f)
+			zoom = 5.0f;
+	}
+
+	// Clip what we're drawing next
+	draw_list->PushClipRect(display_p0, display_p1, true);
+
+	// Draw the tileset
+	if (nullptr != m_pAtlasTex)
+	{
+		ImVec2 tileset_p0 = ImVec2(origin.x, origin.y);
+		ImVec2 tileset_p1 = ImVec2(origin.x + (m_vTexResolution.x / zoom), origin.y + (m_vTexResolution.y / zoom));
+		draw_list->AddImage(m_pAtlasTex->GetSRV().Get(), tileset_p0, tileset_p1, ImVec2(0, 0), ImVec2(1, 1));
+	}
+
+	if (L"" == m_strSpriteKey)
+	{
+		if (is_hovered && !adding_Rect && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		{
+			points.clear();
+			FloatReset();
+
+			points.push_back(mouse_pos_in_display);
+			points.push_back(ImVec2{ 0, 0 });
+
+
+			m_SampleUV[0].x = (mouse_pos_in_display.x / (m_vTexResolution.x / zoom));
+			m_SampleUV[0].y = (mouse_pos_in_display.y / (m_vTexResolution.y / zoom));
+
+			_vCalculValue = Vec2(m_SampleUV[0].x, m_SampleUV[0].y);
+
+			adding_Rect = true;
+		}
+		if (adding_Rect)
+		{
+			points.back() = mouse_pos_in_display;
+
+			m_SampleUV[1].x = (mouse_pos_in_display.x / (m_vTexResolution.x / zoom));
+			m_SampleUV[1].y = (mouse_pos_in_display.y / (m_vTexResolution.y / zoom));
+
+			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+			{
+				//UV단위
+				m_OriginUV[1] = m_SampleUV[1];
+
+				// 프레임의 UV크기가 0.01f 이하이면 그리지 않는다
+				m_SampleUV[2].x = m_SampleUV[1].x - m_SampleUV[0].x;
+				m_SampleUV[2].y = m_SampleUV[1].y - m_SampleUV[0].y;
+				if (m_SampleUV[2].x < 0.01f)
+				{
+					points.clear();
+					FloatReset();
+				}
+				adding_Rect = false;
+			}
+
+		}
+	}
+	else
+	{
+		tSprite* data = CResMgr::GetInst()->FindSpriteOffsetInfo(m_pAtlasTex->GetKey(), m_strSpriteKey);
+
+		if (nullptr != data)
+		{
+			m_SampleUV[0] = data->vPos / m_vTexResolution;
+			m_SampleUV[2] = data->vSize / m_vTexResolution;
+			m_SampleUV[1] = m_SampleUV[0] + m_SampleUV[2];
+
+			points.resize(2);
 		}
 	}
 
 	if (points.Size > 1)
 	{
 		//픽셀단위 렉트영역 좌표값 설정
-		m_vDrawRectInfo[0] = Vec2(origin.x + (m_SampleUV[0].x * m_vTexResolution.x), origin.y + (m_SampleUV[0].y * m_vTexResolution.y));
-		m_vDrawRectInfo[1] = Vec2(origin.x + (m_SampleUV[1].x * m_vTexResolution.x), origin.y + (m_SampleUV[1].y * m_vTexResolution.y));
-	}
+		m_vDrawRectInfo[0] = Vec2(origin.x + (m_SampleUV[0].x * (m_vTexResolution.x / zoom)), origin.y + (m_SampleUV[0].y *(m_vTexResolution.y / zoom)));
+		m_vDrawRectInfo[1] = Vec2(origin.x + (m_SampleUV[1].x * (m_vTexResolution.x / zoom)), origin.y + (m_SampleUV[1].y * (m_vTexResolution.y / zoom)));
 
-	//드래그로 렉트영역 생성
-	for (int n = 0; n < points.Size; n += 2)
-	{
-		draw_list_1->AddRect(ImVec2(m_vDrawRectInfo[n].x, m_vDrawRectInfo[n].y),
-						     ImVec2(m_vDrawRectInfo[n + 1].x, m_vDrawRectInfo[n + 1].y),
-					         IM_COL32(0, 255, 0, 255), 2.0f);
+		draw_list->AddRect(ImVec2(m_vDrawRectInfo[0].x, m_vDrawRectInfo[0].y),
+			ImVec2(m_vDrawRectInfo[1].x, m_vDrawRectInfo[1].y),
+			IM_COL32(0, 255, 0, 255), 2.0f);
+
 	}
 
 	//추가된 모든 애니메이션의 흰색 렉트영역 표시
@@ -179,29 +309,16 @@ void Create2DAnimationUI::render_update()
 	//}
 
 	//추가된 애니메이션의 흰색 렉트영역 표시
-	if (m_vecPreviewInfo.size() > 0)
-	{
-		draw_list_1->AddRect(
-			ImVec2(origin.x + m_vecPreviewInfo[m_iCheckIdx].vLT.x * m_vTexResolution.x,
-				origin.y + m_vecPreviewInfo[m_iCheckIdx].vLT.y * m_vTexResolution.y),
-			ImVec2(origin.x + m_vecPreviewInfo[m_iCheckIdx].vRB.x * m_vTexResolution.x,
-				origin.y + m_vecPreviewInfo[m_iCheckIdx].vRB.y * m_vTexResolution.y),
-			IM_COL32(255, 255, 255, 255), 2.0f);
-	}
+	//if (m_vecPreviewInfo.size() > 0)
+	//{
+	//	draw_list->AddRect(
+	//		ImVec2(origin.x + m_vecPreviewInfo[m_iCheckIdx].vLT.x * m_vTexResolution.x,
+	//			origin.y + m_vecPreviewInfo[m_iCheckIdx].vLT.y * m_vTexResolution.y),
+	//		ImVec2(origin.x + m_vecPreviewInfo[m_iCheckIdx].vRB.x * m_vTexResolution.x,
+	//			origin.y + m_vecPreviewInfo[m_iCheckIdx].vRB.y * m_vTexResolution.y),
+	//		IM_COL32(255, 255, 255, 255), 2.0f);
+	//}
 
-	//확대 / 축소
-	if (ImGui::IsItemHovered())
-	{
-		if (KEY_PRESSED(KEY::K))
-			m_fImgZoom += 0.5f;
-
-		if (KEY_PRESSED(KEY::L) && m_fImgZoom > 0.f)
-			m_fImgZoom -= 0.5f;
-
-		if (m_fImgZoom < 0.f) m_fImgZoom = 0.f;
-	}
-
-	// ================================= 마우스 로직 ================================= //
 
 	ImGui::EndChild();
 
@@ -212,48 +329,55 @@ void Create2DAnimationUI::render_update()
 	ImGui::PushItemWidth(250.f);
 	ImGui::Dummy(ImVec2(0.f, 5.f));
 
-	static float _ScreenMousePos[2];
-	_ScreenMousePos[0] = GetIO.MousePos.x;
-	_ScreenMousePos[1] = GetIO.MousePos.y;
-	ImGui::Text(" Screen MousePos");
-	ImGui::SameLine(m_fStride, 0.f);
-	ImGui::DragFloat2("##Screen Mouse Pos_1", _ScreenMousePos, 0.f, 0.f, 0.f, "%.3f", ImGuiSliderFlags_NoInput);
-
 	static float _canvasMousePos[2];
-	_canvasMousePos[0] = mouse_pos_in_canvas.x;
-	_canvasMousePos[1] = mouse_pos_in_canvas.y;
+	_canvasMousePos[0] = mouse_pos_in_display.x;
+	_canvasMousePos[1] = mouse_pos_in_display.y;
 	ImGui::Text(" Canvas MousePos");
 	ImGui::SameLine(m_fStride, 0.f);
 	ImGui::DragFloat2("##Canvas Mouse Pos_1", _canvasMousePos, 0.f, 0.f, 0.f, "%.3f", ImGuiSliderFlags_NoInput);
 
-
-	//_RectLT[0] = m_SampleUV[0].x * m_vTexResolution.x; 이렇게 표시하면 현재 선택렉트의 위치가 그대로 표시. 
-    //그런데 이값을 그대로 더하면 밑에서 또 더해서 2배가 되버려서 위치가 완전 꼬여버림.
-    //렉트의 위치가 정해질 때의 좌표를 2개 저장, 1개는 변화, 1개는 고정. 변화량에 고정값을 빼서 이동시켜주면 된다
-	_RectLT[0] = m_SampleUV[0].x * m_vTexResolution.x;
-	_RectLT[1] = m_SampleUV[0].y * m_vTexResolution.y;
-
-	//ImGui::PushItemWidth(80.f);
-	ImGui::Text(" Set Rect Pos");
+	ImGui::Text(" Sprite Key");
 	ImGui::SameLine(m_fStride, 0.f);
-	ImGui::DragFloat2("##Set Rect Pos_1", _RectLT, 0.1f);
-
-	ImGui::Text(" Set Rect Size");
-	ImGui::SameLine(m_fStride, 0.f);
-	if (ImGui::DragFloat2("##Sample Rect Size_1", _RectSize, 0.1f))
+	ImGui::InputText("##SpriteKey", (char*)ToString(m_strSpriteKey).c_str(), 256, ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	if (ImGui::Button("##SpriteKeyListBtn", Vec2(15, 15)))
 	{
-		m_ChangeRectSize.x = _RectSize[0] / m_vTexResolution.x;
-		m_ChangeRectSize.y = _RectSize[1] / m_vTexResolution.y;
+		// XML Map을 가져온다
+		const map<wstring, CRes*> mapRes = CResMgr::GetInst()->GetResList(RES_TYPE::XMLData);
+
+		if (m_pAtlasTex != nullptr)
+		{
+			// 현재 Atlas에 해당하는 XML 파일이 있는지 확인한다. 
+			wstring spriteKey = m_pAtlasTex->GetKey();
+			size_t pos = spriteKey.find_last_of(L".");
+			assert(pos != spriteKey.npos);
+			spriteKey = spriteKey.substr(0, pos);
+			spriteKey += L".xml";
+
+			// XML이 있다면 해당 XML이 가진 Sprite ID들을 띄워준다
+			map<wstring, CRes*>::const_iterator iter = mapRes.find(spriteKey);
+			if (iter != mapRes.end())
+			{
+				// ListUI 활성화한다.
+				ListUI* pListUI = (ListUI*)CImGuiMgr::GetInst()->FindUI("##ListUI");
+				pListUI->Clear();
+				pListUI->SetTitle("Sprite List");
+
+				CXMLData* data = (CXMLData*)iter->second;
+				const map<wstring, tSprite> sprites = data->GetSpriteDatas();
+
+				for (const auto& pair : sprites)
+				{
+					pListUI->AddList(string(pair.first.begin(), pair.first.end()));
+				}
+				// List 활성화
+				pListUI->Activate();
+				// 더블클릭 이벤트 등록
+				pListUI->SetDBCEvent(this, (DBCLKED)&Create2DAnimationUI::SpriteKeySelect);
+			}
+		}
+
 	}
-	
-	m_SampleUV[0].x = m_OriginUV[0].x + ((_RectLT[0] - _vCalculValue.x) / m_vTexResolution.x);
-	m_SampleUV[0].y = m_OriginUV[0].y + ((_RectLT[1] - _vCalculValue.y) / m_vTexResolution.y);
-
-	m_SampleUV[1].x = m_OriginUV[1].x + m_ChangeRectSize.x + ((_RectLT[0] - _vCalculValue.x) / m_vTexResolution.x);
-	m_SampleUV[1].y = m_OriginUV[1].y + m_ChangeRectSize.y + ((_RectLT[1] - _vCalculValue.y) / m_vTexResolution.y);
-
-	m_SampleUV[2].x = m_SampleUV[1].x - m_SampleUV[0].x;
-	m_SampleUV[2].y = m_SampleUV[1].y - m_SampleUV[0].y;
 
 
 	ImGui::PushItemWidth(250.f);
@@ -288,6 +412,10 @@ void Create2DAnimationUI::render_update()
 	ImGui::SameLine(m_fStride, 0.f);
 	ImGui::InputText("##Animation Name_1", (char*)m_animName.c_str(), m_animName.capacity());
 
+	ImGui::Text(" Repeat");
+	ImGui::SameLine(m_fStride, 0.f);
+	ImGui::Checkbox("##Animation Repeat", &m_bIsRepeat);
+
 
 	ImGui::Text(" Save Button");
 	ImGui::SameLine(m_fStride, 0.f);
@@ -302,7 +430,7 @@ void Create2DAnimationUI::render_update()
 		m_vecAnim2DInfo.push_back(m_t2DFrm);
 
 		Preview_Info m_preview = {};
-		m_preview.vOriginSize = ImVec2(m_SampleUV[2].x * m_pTex->Width(), m_SampleUV[2].y * m_pTex->Height());
+		m_preview.vOriginSize = ImVec2(m_SampleUV[2].x * m_pAtlasTex->Width(), m_SampleUV[2].y * m_pAtlasTex->Height());
 		m_preview.vSize = m_preview.vOriginSize;
 		m_preview.vOriginLT = V2ToImV2(m_SampleUV[0]);
 		m_preview.vLT = m_preview.vOriginLT;            //LeftTop
@@ -345,12 +473,12 @@ void Create2DAnimationUI::render_update()
 		{
 			CAnimation2D* pAnim2D = new CAnimation2D;
 			//여기서 이 애니메이션이 반복인지 아닌지 결정해서 넘겨주기
-			pAnim2D->SetAnimFrame(m_pTex, m_vecAnim2DInfo);
+			pAnim2D->SetAnimFrame(m_pAtlasTex, m_vecAnim2DInfo);
 			pAnim2D->SetRepeat(m_bIsRepeat);
 
 			m_pTargetObj->Animator2D()->AddAnim(m_animName.c_str(), pAnim2D);
 
-			//Delegate : Animator2DUI::AddAnimList()
+			//Delegate : Animator2DUI::UpdateAnimList()
 			(m_Inst->*m_AddAnimEvent)((DWORD_PTR)m_animName.c_str());
 
 			VecClearFunc();
@@ -402,7 +530,7 @@ void Create2DAnimationUI::render_update()
 	else m_strCheckButton = "Stop";
 
 	// ======= Check할 애니메이션 이미지 창 ======= //
-	ImVec2 _checkSize = ImVec2(m_SampleUV[2].x * m_pTex->Width(), m_SampleUV[2].y * m_pTex->Height());
+	ImVec2 _checkSize = ImVec2(m_SampleUV[2].x * m_pAtlasTex->Width(), m_SampleUV[2].y * m_pAtlasTex->Height());
 	ImGui::BeginChild("##Check Animation##2", ImVec2(500.f, 500.f), true);
 	ImVec2 CheckCanvasPos = ImGui::GetCursorScreenPos();
 	CheckCanvasSize = ImGui::GetContentRegionAvail();
@@ -425,7 +553,7 @@ void Create2DAnimationUI::render_update()
 		ImGui::Dummy(ImVec2(m_vecPreviewInfo[m_iCheckIdx].vCheckDummy.x, 0.f));
 		ImGui::SameLine(0.f, 0.f);
 		ImVec2 _temp = ImVec2(m_vecPreviewInfo[m_iCheckIdx].vSize.x, m_vecPreviewInfo[m_iCheckIdx].vSize.y);
-		ImGui::Image(m_pTex->GetSRV().Get(), _temp, m_vecPreviewInfo[m_iCheckIdx].vLT, m_vecPreviewInfo[m_iCheckIdx].vRB);
+		ImGui::Image(m_pAtlasTex->GetSRV().Get(), _temp, m_vecPreviewInfo[m_iCheckIdx].vLT, m_vecPreviewInfo[m_iCheckIdx].vRB);
 	}
 
 	ImGui::EndChild();
@@ -614,6 +742,25 @@ void Create2DAnimationUI::SetTargetObj(CGameObject* _obj)
 	//m_vTexResolution = Vec2(m_pTex->Width() + m_fImgZoom, m_pTex->Height() + m_fImgZoom);
 }
 
+void Create2DAnimationUI::CreateAnimation(wstring _name)
+{
+	if (m_vecAnim2DInfo.size() > 0)
+	{
+		CAnimation2D* pAnim2D = new CAnimation2D;
+		//여기서 이 애니메이션이 반복인지 아닌지 결정해서 넘겨주기
+		pAnim2D->SetName(_name);
+		pAnim2D->SetAnimFrame(m_pAtlasTex, m_vecAnim2DInfo);
+		pAnim2D->SetRepeat(m_bIsRepeat);
+
+		m_pTargetObj->Animator2D()->AddAnim(ToString(_name).c_str(), pAnim2D);
+
+		//Delegate : Animator2DUI::UpdateAnimList()
+		(m_Inst->*m_AddAnimEvent)((DWORD_PTR)_name.c_str());
+
+		VecClearFunc();
+	}
+}
+
 ImVec2 Create2DAnimationUI::V2ToImV2(Vec2& _vec2)
 {
 	ImVec2 _imvec2;
@@ -664,3 +811,19 @@ void Create2DAnimationUI::SetCheckDummy(Preview_Info& _preview)
 		scrolling.y += io.MouseDelta.y;
 	}
 */
+
+void Create2DAnimationUI::TextureSelect(DWORD_PTR _param)
+{
+	string strSelectedName = (char*)_param;
+	wstring strTexKey = wstring(strSelectedName.begin(), strSelectedName.end());
+
+	m_pAtlasTex = (CTexture*)CResMgr::GetInst()->FindRes<CTexture>(strTexKey).Get();
+	if(m_pAtlasTex != nullptr)
+		m_vTexResolution = Vec2(m_pAtlasTex->Width(), m_pAtlasTex->Height());
+}
+
+void Create2DAnimationUI::SpriteKeySelect(DWORD_PTR _param)
+{
+	string strSelectedName = (char*)_param;
+	m_strSpriteKey = wstring(strSelectedName.begin(), strSelectedName.end());
+}

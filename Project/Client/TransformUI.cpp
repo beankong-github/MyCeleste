@@ -6,7 +6,7 @@
 TransformUI::TransformUI()
 	: ComponentUI("Transform", COMPONENT_TYPE::TRANSFORM)	
 {
-	SetSize(Vec2(0.f, 100.f));
+	SetSize(Vec2(0.f, 150.f));
 }
 
 TransformUI::~TransformUI()
@@ -57,4 +57,15 @@ void TransformUI::render_update()
 	ImGui::InputFloat3("##Rotation", vRot);
 	vRot.ToRadian();
 	pTrans->SetRelativeRotation(vRot);
+
+	ImGui::Text("IngnoreParentScale");
+	ImGui::SameLine();
+	bool ignore = pTrans->IsIgnoreParentScale();
+	ImGui::Checkbox("##IngPrntScale", &ignore);
+
+
+	ImGui::Text("SameRatioWithSprite");
+	ImGui::SameLine();
+	bool same = pTrans->IsSameRatioWithSprite();
+	ImGui::Checkbox("##IngPrntScale", &same);
 }

@@ -28,12 +28,25 @@ public:
         m_pAtlasTex = _pAtlasTex;
         m_vSliceUV = m_vSlicePixel / Vec2(m_pAtlasTex->Width(), m_pAtlasTex->Height());
     }
+    //void SetAtlasTileCount(Vec2 _v)
+    //{
+    //    m_iRowCount = _v.x;
+    //    m_iColCount = _v.y;
+    //}
 
     void SetTileSize(Vec2 _vPixelSize)
     {
         m_vSlicePixel = _vPixelSize;
         if (nullptr != m_pAtlasTex)
+        {
+            // 타일 UV 계산하기
             m_vSliceUV = m_vSlicePixel / Vec2(m_pAtlasTex->Width(), m_pAtlasTex->Height());
+            
+            // 아틀라스의 가로 세로 타일 수 계산하기
+            m_iColCount = m_pAtlasTex->Width() / m_vSlicePixel.x;
+            m_iRowCount = m_pAtlasTex->Height() / m_vSlicePixel.y;
+
+        }
     }
 
     void SetTileMapSize(UINT _iCountX, UINT _iCountY);

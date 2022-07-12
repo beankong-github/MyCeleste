@@ -12,6 +12,8 @@ CResMgr::~CResMgr()
 	{
 		Safe_Del_Map(m_Res[i]);
 	}
+
+	//Safe_Del_Map(m_AtlasTex);
 }
 
 void CResMgr::SaveChangedRes()

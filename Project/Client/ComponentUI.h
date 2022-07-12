@@ -10,7 +10,6 @@ private:
     CGameObject*    m_pTargetObject;
     COMPONENT_TYPE  m_eComType;
 
-
     bool            m_bActive;
 
 public:
@@ -27,6 +26,6 @@ public:
 
 public:
     ComponentUI(const string& _strName, COMPONENT_TYPE _eComType);
-    ~ComponentUI();
+    virtual ~ComponentUI();
 };
 

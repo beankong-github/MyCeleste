@@ -9,6 +9,8 @@ void CResMgr::init()
 	CreateEngineMaterial();
 
 	CreateEngineComputeShader();
+
+	LoadSpriteFromAtlas();
 }
 
 void CResMgr::CreateEngineMesh()
@@ -135,18 +137,20 @@ void CResMgr::CreateEngineMesh()
 
 void CResMgr::CreateEngineTexture()
 {
+	Ptr<CTexture> pNoise01 = Load<CTexture>(L"texture\\util\\noise.png", L"texture//util//noise.png", true);
+	/*
 	Ptr<CTexture> pNoise01 = Load<CTexture>(L"texture\\noise\\noise_01.png", L"texture//noise//noise_01.png", true);
 	Ptr<CTexture> pNoise02 = Load<CTexture>(L"texture\\noise_02.png", L"texture//noise//noise_02.png", true);
-	Ptr<CTexture> pNoiseCloud = Load<CTexture>(L"texture\\noise\\noise_cloud.jpg", L"texture//noise//noise_cloud.jpg", true);
+	Ptr<CTexture> pNoiseCloud = Load<CTexture>(L"texture\\noise\\noise_cloud.jpg", L"texture//noise//noise_cloud.jpg", true);*/
 
 	pNoise01->UpdateData(PIPELINE_STAGE::ALL, 70);
 	pNoise01->UpdateData_CS(70, true);
 
-	pNoise02->UpdateData(PIPELINE_STAGE::ALL, 71);
-	pNoise02->UpdateData_CS(71, true);
+	//pNoise02->UpdateData(PIPELINE_STAGE::ALL, 71);
+	//pNoise02->UpdateData_CS(71, true);
 
-	pNoiseCloud->UpdateData(PIPELINE_STAGE::ALL, 72);
-	pNoiseCloud->UpdateData_CS(72, true);
+	//pNoiseCloud->UpdateData(PIPELINE_STAGE::ALL, 72);
+	//pNoiseCloud->UpdateData_CS(72, true);
 
 	g_global.vNoiseResolution = Vec2(pNoise01->Width(), pNoise01->Height());
 }
@@ -167,14 +171,14 @@ void CResMgr::CreateEngineShader()
 	pShader->SetBSType(BS_TYPE::DEFAULT);
 		
 	pShader->AddScalarParamInfo(L"Mask Limit", SCALAR_PARAM::FLOAT_0);
-	pShader->AddTexParamInfo(L"OutputTex 0", TEX_PARAM::TEX_0);
+	pShader->AddTexParamInfo(L"OutputTex 0", TEX_PARAM::TEX_0);/*
 	pShader->AddTexParamInfo(L"OutputTex 1", TEX_PARAM::TEX_1);
 	pShader->AddTexParamInfo(L"OutputTex 2", TEX_PARAM::TEX_2);
 
-	pShader->AddScalarParamInfo(L"TestParam", SCALAR_PARAM::INT_0);
+	pShader->AddScalarParamInfo(L"TestParam", SCALAR_PARAM::INT_0);*/
 
 
-	AddRes<CGraphicsShader>(L"Std2DShader", pShader);
+	AddRes<CGraphicsShader>(L"Std2DShader", pShader, true);
 
 
 	// Std2DAlphaBlend Shader
@@ -212,8 +216,10 @@ void CResMgr::CreateEngineShader()
 	pShader->CreateVertexShader(L"shader\\tilemap.fx", "VS_TileMap");
 	pShader->CreatePixelShader(L"shader\\tilemap.fx", "PS_TileMap");
 
-	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_MASKED);
+	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_TRANSLUCENT);
 	pShader->SetRSType(RS_TYPE::CULL_NONE);		
+	pShader->SetBSType(BS_TYPE::ALPHA_BLEND);
+	pShader->SetDSType(DS_TYPE::NO_WRITE);
 
 	pShader->AddTexParamInfo(L"TileMapAtlas", TEX_PARAM::TEX_0);
 
@@ -232,7 +238,7 @@ void CResMgr::CreateEngineShader()
 
 	// pShader->AddScalarParamInfo(L"IsCollision", SCALAR_PARAM::INT_0);
 
-	AddRes<CGraphicsShader>(L"Collider2DShader", pShader);
+	AddRes<CGraphicsShader>(L"Collider2DShader", pShader, true);
 
 
 	// Particle Render Shader
@@ -279,6 +285,7 @@ void CResMgr::CreateEngineMaterial()
 	{
 		pMtrl->Save(strContent + pMtrl->GetKey());
 	}
+
 	// Std2DAlphaBlendg
 	pMtrl = new CMaterial;
 	pMtrl->SetShader(FindRes<CGraphicsShader>(L"Std2DAlphaBlendShader"));
@@ -397,6 +404,34 @@ void CResMgr::MakeInputLayoutInfo()
 
 	CGraphicsShader::AddInputLayout(tInputDesc);
 }
+
+void CResMgr::LoadSpriteFromAtlas()
+{
+
+}
+
+tSprite* CResMgr::FindSpriteOffsetInfo(wstring _atlasKey, wstring _key)
+{
+	int i = _atlasKey.find_last_of(L".");
+	wstring xmlkey = _atlasKey.substr(0, i);
+	xmlkey += L".xml";
+	
+	CXMLData* pXml = FindRes<CXMLData>(xmlkey).Get();
+	if (nullptr != pXml)
+		return pXml->FindSpriteInfo(_key);
+
+	return nullptr;
+}
+
+//tSprite* CResMgr::FindSpriteOffsetInfo(wstring _key)
+//{
+//	auto iter = m_SpriteOffsets.find(_key);
+//
+//	if (m_SpriteOffsets.end() != iter)
+//		return &iter->second;
+//
+//	return nullptr;
+//}
 
 
 

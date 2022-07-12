@@ -21,7 +21,6 @@ private:
 public:
     void SetShader(Ptr<CGraphicsShader> _pShader);                          // 쉐이더 설정
     Ptr<CGraphicsShader> GetShader() { return m_pShader; }
-
     void SetScalarParam(SCALAR_PARAM _eType, void* _pData);                 // Type으로 Scalar Parameter 전달
     void SetScalarParam(const wstring& _strParamName, void* _pData);        // 이름으로 Scalar Parameter 전달
 

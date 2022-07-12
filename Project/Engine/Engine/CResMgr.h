@@ -11,6 +11,7 @@
 #include "CGraphicsShader.h"
 #include "CComputeShader.h"
 #include "CSceneFile.h"
+#include "CXMLData.h"
 //#include "CSound.h"
 //#include "CMeshData.h"
 
@@ -20,8 +21,9 @@ class CResMgr
 	: public CSingleton<CResMgr>
 {
 	SINGLE(CResMgr);
+
 private:
-	map<wstring, CRes*>		m_Res[(UINT)RES_TYPE::END];
+	map<wstring, CRes*>			m_Res[(UINT)RES_TYPE::END];
 
 public:
 	void init();
@@ -34,6 +36,10 @@ private:
 	void CreateEngineComputeShader();
 	void CreateEngineMaterial();
 	void MakeInputLayoutInfo();
+	void LoadSpriteFromAtlas();
+
+public:
+	tSprite* FindSpriteOffsetInfo(wstring _atlasKey, wstring _key);
 
 public:
 	template<typename type>
@@ -82,6 +88,8 @@ inline RES_TYPE CResMgr::GetResType()
 		return RES_TYPE::TEXTURE;
 	else if (info.hash_code() == typeid(CSceneFile).hash_code())
 		return RES_TYPE::SCENEFILE;
+	else if (info.hash_code() == typeid(CXMLData).hash_code())
+		return RES_TYPE::XMLData;
 	
 
 	return RES_TYPE::END;
@@ -138,7 +146,17 @@ void CResMgr::AddRes(const wstring& _strKey, type* _pRes, bool _bEngineRes)
 	assert(nullptr == pRes);
 
 	_pRes->SetKey(_strKey);
+	_pRes->SetRelativePath(_strKey);
 	_pRes->m_bEngineRes = _bEngineRes;
 
 	m_Res[(UINT)eType].insert(make_pair(_strKey, _pRes));
+
+	if (_bEngineRes)
+		return;
+
+	wstring strContent = CPathMgr::GetInst()->GetContentPath();
+	if (FAILED(_pRes->Load(strContent + _pRes->GetRelativePath())))
+	{
+		_pRes->Save(strContent + _pRes->GetKey());
+	}
 }

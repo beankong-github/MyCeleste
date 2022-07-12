@@ -26,12 +26,14 @@ void TileMapUI::render_update()
 {
 	ComponentUI::render_update();
 
-
 	CGameObject* pTargetObject = GetTargetObject();
 	CTileMap* pTileMap = pTargetObject->TileMap();
 	CTexture* pTexture = pTileMap->GetAtlasTex();
-	string strAtlasName = string(pTexture->GetKey().begin(), pTexture->GetKey().end());
-
+	
+	string strAtlasName;
+	if (nullptr != pTexture)
+		string strAtlasName = string(pTexture->GetKey().begin(), pTexture->GetKey().end());
+	
 	ImGui::Text("TileMap Atals Key");
 	ImGui::SameLine(140);
 	ImGui::SetNextItemWidth(180);

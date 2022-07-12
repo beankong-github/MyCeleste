@@ -326,6 +326,9 @@ int CDevice::CreateConstBuffer()
 	m_arrCB[(UINT)CB_TYPE::GLOBAL] = new CConstBuffer(CB_TYPE::GLOBAL);
 	m_arrCB[(UINT)CB_TYPE::GLOBAL]->Create(sizeof(tGlobal));
 
+	m_arrCB[(UINT)CB_TYPE::TEXTUREINFO] = new CConstBuffer(CB_TYPE::TEXTUREINFO);
+	m_arrCB[(UINT)CB_TYPE::TEXTUREINFO]->Create(sizeof(tSprite));
+
 	return S_OK;
 }
 

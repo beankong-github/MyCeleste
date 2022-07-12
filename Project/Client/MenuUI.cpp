@@ -118,7 +118,7 @@ void MenuUI::render_update()
 			}
 			//ImGui::MenuItem("Animator3D", NULL, false, available);
 
-			if (ImGui::MenuItem("LIGHT2D", NULL, false, available))
+			if (ImGui::MenuItem("Light2D", NULL, false, available))
 			{
 				AddComponent(pTarget, COMPONENT_TYPE::LIGHT2D);
 			}

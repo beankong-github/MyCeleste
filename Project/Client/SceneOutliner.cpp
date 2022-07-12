@@ -7,6 +7,7 @@
 #include <Engine/CGameObject.h>
 
 #include <Engine/CEventMgr.h>
+#include <Engine/CKeyMgr.h>
 
 #include "CImGuiMgr.h"
 #include "TreeUI.h"
@@ -15,28 +16,32 @@
 
 SceneOutliner::SceneOutliner()
 	: UI("SceneOutliner")
+	, m_bToggleOn(false)
 {
-	m_TreeUI = new TreeUI(true);
-	m_TreeUI->SetTitle("SceneOutliner");
-	m_TreeUI->UseFrame(false);
-	m_TreeUI->ShowDummyRoot(false);
-	m_TreeUI->UseDragDropOuter(true);
-	m_TreeUI->UseDragDropSelf(true);
+	m_pTreeUI = new TreeUI(true);
+	m_pTreeUI->SetTitle("SceneOutliner");
+	m_pTreeUI->UseFrame(false);
+	m_pTreeUI->ShowDummyRoot(false);
+	m_pTreeUI->UseDragDropOuter(true);
+	m_pTreeUI->UseDragDropSelf(true);
 
 
-	AddChild(m_TreeUI);
+	AddChild(m_pTreeUI);
 
 	// Clicked Delegate 등록
-	m_TreeUI->SetClickedDelegate(this, (CLICKED)&SceneOutliner::OnObjectNodeClicked);
+	m_pTreeUI->SetClickedDelegate(this, (CLICKED)&SceneOutliner::OnObjectNodeClicked);
+
+	// Right Delegate 등록
+	m_pTreeUI->SetRightClickedDelegate(this, (CLICKED) & SceneOutliner::OnRightClicked);
 
 	// Drag and Drop Delegate 등록
-	m_TreeUI->SetDragAndDropDelegate(this, (DRAG_DROP)&SceneOutliner::DragAndDropDelegate);
+	m_pTreeUI->SetDragAndDropDelegate(this, (DRAG_DROP)&SceneOutliner::DragAndDropDelegate);
 
 	// Key Delegate 등록
-	m_TreeUI->SetKeyBinding(KEY::DEL, this, (CLICKED)&SceneOutliner::OnPressDelete);
+	m_pTreeUI->SetKeyBinding(KEY::DEL, this, (CLICKED)&SceneOutliner::OnPressDelete);
 	
 	// 외부UI로부터 Drop 체크 Delegate 등록
-	m_TreeUI->SetDropCheckDelegate(this, (DROPCHECK)&SceneOutliner::DropCheckDelegate);
+	m_pTreeUI->SetDropCheckDelegate(this, (DROPCHECK)&SceneOutliner::DropCheckDelegate);
 
 	Reset();
 }
@@ -58,19 +63,71 @@ void SceneOutliner::update()
 
 void SceneOutliner::render_update()
 {
-	if (!ImGui::IsWindowFocused())
-		return;
-
 	// 우클릭 감지
 	//Vec2 vWinLT = Vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
 	//Vec2 vWinRB = vWinLT + Vec2(ImGui::GetWindowContentRegionMax().x, ImGui::GetWindowContentRegionMax().y);
 	//if (ImGui::IsMouseHoveringRect(vWinLT, vWinRB) && ImGui::IsMouseClicked(ImGuiButtonFlags_MouseButtonRight >> 1))
 	//	OnRightClicked();
+
+
+	// ========
+	//	Toggle
+	// ========
+	if (m_bToggleOn)
+	{
+		// 키 검사
+		if (KEY_TAP(KEY::ESC))
+		{
+			m_bToggleOn = false;
+			return;
+		}
+
+		// PopUp Open
+		ImGui::OpenPopup("##Popup Toggle");
+	}
+	if (ImGui::BeginPopup("##Popup Toggle"))
+	{
+		if (ImGui::MenuItem("Copy"))
+		{
+			tEventInfo info = {};
+
+			info.eType = EVENT_TYPE::CREATE_OBJ;
+			info.lParam = (DWORD_PTR)m_pRClickedOject->Clone();
+			info.wParam = (DWORD_PTR)m_pRClickedOject->GetLayerIndex();
+			CEventMgr::GetInst()->AddEvent(info);
+
+			m_pRClickedOject = nullptr;
+			m_bToggleOn = false;
+		}
+
+		if (ImGui::MenuItem("Delete"))
+		{
+			tEventInfo info = {};
+
+			info.eType = EVENT_TYPE::DELETE_OBJ;
+			info.lParam = (DWORD_PTR)m_pRClickedOject;
+			CEventMgr::GetInst()->AddEvent(info);
+
+			m_pRClickedOject = nullptr;
+			m_bToggleOn = false;
+		}
+
+		if (ImGui::MenuItem("Make Prefab"))
+		{
+			// 프리팹 추가
+			MakePrefab(m_pRClickedOject);
+
+			m_pRClickedOject = nullptr;
+			m_bToggleOn = false;
+		}
+
+		ImGui::EndPopup();
+	}
 }
 
 void SceneOutliner::Reset()
 {
-	m_TreeUI->Clear();
+	m_pTreeUI->Clear();
 
 	// 현재 Scene 을 가져온다.
 	CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
@@ -83,7 +140,7 @@ void SceneOutliner::Reset()
 
 		for (size_t i = 0; i < vecRoots.size(); ++i)
 		{
-			AddGameObjectToTree(vecRoots[i], m_TreeUI->GetDummyNode());
+			AddGameObjectToTree(vecRoots[i], m_pTreeUI->GetDummyNode());
 		}
 	}
 
@@ -106,9 +163,46 @@ void SceneOutliner::OnObjectNodeClicked(DWORD_PTR _dw)
 	pInspectorUI->SetTargetObject(pObject);
 }
 
+void SceneOutliner::MakePrefab(CGameObject* _pObj)
+{
+	wstring key = L"prefab\\" + _pObj->GetName() + L".pref";
+
+	CPrefab* pref = CResMgr::GetInst()->FindRes<CPrefab>(key).Get();
+
+	// 중복키가 있다면
+	if (nullptr != pref)
+	{
+		map<wstring, CRes*> mPrefs = CResMgr::GetInst()->GetResList(RES_TYPE::PREFAB);
+		map<wstring, CRes*>::iterator iter = mPrefs.begin();
+
+		int count = 0;
+		for (; iter != mPrefs.end(); ++iter)
+		{
+			CPrefab* p = (CPrefab*)iter->second;
+			if (p->GetProto()->GetName() == _pObj->GetName())
+			{
+				++count;
+			}
+		}
+
+		key = L"prefab\\" + _pObj->GetName() + L"("+ std::to_wstring(count) + L")" + L".pref";
+	}
+
+	CPrefab* pPref = new CPrefab;
+	pPref->SetProto(_pObj->Clone());
+	CResMgr::GetInst()->AddRes<CPrefab>(key, pPref);
+
+	// 리소스 뷰 갱신
+	ResourceUI* pResUI = (ResourceUI*)CImGuiMgr::GetInst()->FindUI("Resource");
+	if (nullptr != pResUI)
+	{
+		pResUI->Reset();
+	}
+}
+
 void SceneOutliner::AddGameObjectToTree(CGameObject* _pObject, TreeNode* _pDestNode)
 {
-	TreeNode* pNode = m_TreeUI->AddTreeNode(_pDestNode
+	TreeNode* pNode = m_pTreeUI->AddTreeNode(_pDestNode
 											, string(_pObject->GetName().begin(), _pObject->GetName().end())
 											, (DWORD_PTR)_pObject);
 
@@ -120,8 +214,16 @@ void SceneOutliner::AddGameObjectToTree(CGameObject* _pObject, TreeNode* _pDestN
 	}
 }
 
-void SceneOutliner::OnRightClicked()
+void SceneOutliner::OnRightClicked(DWORD_PTR _dw)
 {
+	TreeNode* pNode = (TreeNode*)_dw;
+
+	string strKey = pNode->GetName();
+	m_pRClickedOject = (CGameObject*)pNode->GetData();
+
+	assert(m_pRClickedOject);
+
+	m_bToggleOn = true;
 }
 
 void SceneOutliner::OnPressDelete(DWORD_PTR _dw)

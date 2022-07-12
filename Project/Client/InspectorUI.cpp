@@ -3,6 +3,8 @@
 
 #include <Engine/CKeyMgr.h>
 #include <Engine/CEventMgr.h>
+#include <Engine/CSceneMgr.h>
+#include <Engine/CScene.h>
 #include <Engine/CScript.h>
 
 #include "CImGuiMgr.h"
@@ -19,6 +21,7 @@
 
 #include "MaterialUI.h"
 #include "TextureUI.h"
+#include "PrefabUI.h"
 #include "CImGuiMgr.h"
 #include "Create2DAnimationUI.h"
 
@@ -77,6 +80,10 @@ InspectorUI::InspectorUI()
 	AddChild(pResInfoUI);
 	m_arrResUI[(UINT)RES_TYPE::TEXTURE] = pResInfoUI;
 
+	pResInfoUI = new PrefabUI;
+	AddChild(pResInfoUI);
+	m_arrResUI[(UINT)RES_TYPE::PREFAB] = pResInfoUI;
+
 	m_pCreate2DAnim = (Create2DAnimationUI*)CImGuiMgr::GetInst()->FindUI("Create 2D Animation UI");
 
 }
@@ -88,6 +95,18 @@ InspectorUI::~InspectorUI()
 
 void InspectorUI::update()
 {
+	for (int i = 0; i < (UINT)COMPONENT_TYPE::END; i++)
+	{
+		if(nullptr != m_arrComUI[i])
+			m_arrComUI[i]->update();
+	}
+
+	for (int i = 0; i < (UINT)RES_TYPE::END; i++)
+	{
+		if (nullptr != m_arrResUI[i])
+			m_arrResUI[i]->update();
+	}
+
 	//if (KEY_TAP(KEY::I))
 	//{
 	//	if (IsActive())
@@ -101,49 +120,62 @@ void InspectorUI::render_update()
 {
 	if (nullptr != m_pTargetObject)
 	{
-		// OBJ 이름 표시
-
-		ImGui::Text("Name");
-		ImGui::SameLine();
-
-		char buffer[256] = {};
-		string strName = ToString(m_pTargetObject->GetName());
-		strcpy_s(buffer, strName.c_str());
-		
-		if (ImGui::InputText("##ObjName", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue))
+		if (ImGui::BeginTable("##ObjInfoTable", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			// 입력받은 이름으로 셋팅
-			string strInput(buffer);
-			m_pTargetObject->SetName(ToWString(strInput));
-			
-			// SceneOutliner에 변경된 이름 반영
-			CGameObject* tmp = m_pTargetObject;
-			SceneOutliner* pList = (SceneOutliner*) CImGuiMgr::GetInst()->FindUI("SceneOutliner");
-			pList->Reset();
-			m_pTargetObject = tmp;
-		}
+			// OBJ 이름 표시
+			ImGui::TableNextColumn();
+			ImGui::Text("Name");
+			ImGui::SameLine();
 
-		// OBJ Layer 표시
-		ImGui::Text("Layer");
-		ImGui::SameLine();
-		
-		int curIdx =m_pTargetObject->GetLayerIndex();
-		CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-		string strLayerName = std::to_string(curIdx) + " : " + ToString(pCurScene->GetLayer(curIdx)->GetName());
+			char buffer[256] = {};
+			string strName = ToString(m_pTargetObject->GetName());
+			strcpy_s(buffer, strName.c_str());
 
-		if (ImGui::BeginCombo("##Layers", strLayerName.c_str()))
-		{
-			for (int i = 0; i < MAX_LAYER; i++)
+			SceneOutliner* pList = (SceneOutliner*)CImGuiMgr::GetInst()->FindUI("SceneOutliner");
+
+			if (ImGui::InputText("##ObjName", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiTableFlags_NoPadInnerX ))
 			{
-				strLayerName = std::to_string(i) + " : " + ToString(pCurScene->GetLayer(i)->GetName());
+				// 입력받은 이름으로 셋팅
+				string strInput(buffer);
+				m_pTargetObject->SetName(ToWString(strInput));
 
-				if (ImGui::Selectable(strLayerName.c_str()))
-				{
-					m_pTargetObject->ChangeLayer(i);
-				}
+				// SceneOutliner에 변경된 이름 반영
+				CGameObject* tmp = m_pTargetObject;
+				pList->Reset();
+				m_pTargetObject = tmp;
 			}
 
-			ImGui::EndCombo();
+			// OBJ Layer 표시
+			ImGui::Text("Layer");
+			ImGui::SameLine();
+
+			int curIdx = m_pTargetObject->GetLayerIndex();
+			CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+			string strLayerName = std::to_string(curIdx) + " : " + ToString(pCurScene->GetLayer(curIdx)->GetName());
+
+			if (ImGui::BeginCombo("##Layers", strLayerName.c_str()))
+			{
+				for (int i = 0; i < MAX_LAYER; i++)
+				{
+					strLayerName = std::to_string(i) + " : " + ToString(pCurScene->GetLayer(i)->GetName());
+
+					if (ImGui::Selectable(strLayerName.c_str()))
+					{
+						m_pTargetObject->ChangeLayer(i);
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+
+			// 프리팹 생성 버튼
+			ImGui::TableNextColumn();
+			if (ImGui::Button("Prefab", ImVec2(50, 50)))
+			{
+				pList->MakePrefab(m_pTargetObject);
+			}
+
+			ImGui::EndTable();
 		}
 
 		ImGui::Separator();
@@ -162,8 +194,11 @@ void InspectorUI::SetTargetObject(CGameObject* _pTarget)
 		if (nullptr != m_arrComUI[i])
 		{
 			// Object 가 nullptr 인 경우
-			if(nullptr == m_pTargetObject)
+			if (nullptr == m_pTargetObject)
+			{
+				m_arrComUI[i]->SetTargetObject(nullptr);
 				m_arrComUI[i]->Deactivate();
+			}
 			else if (m_pTargetObject->GetComponent((COMPONENT_TYPE)i))
 			{
 				m_arrComUI[i]->SetTargetObject(m_pTargetObject);
@@ -175,6 +210,7 @@ void InspectorUI::SetTargetObject(CGameObject* _pTarget)
 			}			
 			else
 			{
+				m_arrComUI[i]->SetTargetObject(nullptr);
 				m_arrComUI[i]->Deactivate();
 			}
 		}		
@@ -222,7 +258,10 @@ void InspectorUI::SetTargetObject(CGameObject* _pTarget)
 	for (int i = 0; i < (int)RES_TYPE::END; ++i)
 	{
 		if (nullptr != m_arrResUI[i] && m_arrResUI[i]->IsActive())
+		{
+			m_arrResUI[i]->SetTargetRes(nullptr);
 			m_arrResUI[i]->Deactivate();
+		}
 	}
 }
 
@@ -235,7 +274,10 @@ void InspectorUI::SetTargetResource(CRes* _pTargetRes)
 	for (int i = 0; i < (int)COMPONENT_TYPE::END; ++i)
 	{
 		if (nullptr != m_arrComUI[i] && m_arrComUI[i]->IsActive())
+		{
+			m_arrComUI[i]->SetTargetObject(nullptr);
 			m_arrComUI[i]->Deactivate();
+		}
 	}
 
 	// ScriptUI 전부 비활성화

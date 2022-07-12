@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "LandScapeEditor.h"
 
+#include <Engine\CKeyMgr.h>
+
 #include <Engine\CTileMap.h>
 #include <Engine\CResMgr.h>
 #include <Engine\CCore.h>
@@ -45,8 +47,11 @@ void LandScapeEditor::update()
 			if (nullptr == m_pTileMapEditor)
 			{
 				m_pTileMapEditor = (TileMapEditor*)CImGuiMgr::GetInst()->FindUI("TileMapEditor");
-
+			}
+			if (!m_pTileMapEditor->IsActive())
+			{
 				m_pTileMapEditor->SetTargetObject(m_pTargetGameObject);
+
 				m_pTileMapEditor->Activate();
 			}
 		}
@@ -56,8 +61,15 @@ void LandScapeEditor::update()
 			{ 
 				m_pTileMapEditor->Clear();
 				m_pTileMapEditor->Deactivate();
+				m_pTileMapEditor = nullptr;
 			}
 		}
+	}
+	
+	if (KEY_TAP(KEY::ESC))
+	{
+		if(IsActive())
+			Deactivate();
 	}
 
 }
@@ -125,7 +137,12 @@ void LandScapeEditor::TileMapMode()
 	ImGui::Text("Atlas");
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(100);
-	string strName(pTilemap->GetAtlasTex()->GetKey().begin(), pTilemap->GetAtlasTex()->GetKey().end());
+	string strName;
+	if (nullptr != pAtlasTexture)
+	{
+		strName = ToString(pAtlasTexture->GetKey());
+	}
+	
 	ImGui::InputText("##TileAtlasTexture_LandScapeEditor", (char*)strName.c_str(), strName.capacity(), ImGuiInputTextFlags_ReadOnly);
 	ImGui::SameLine();
 	if (ImGui::Button("##FindTileAtlas", ImVec2(15, 15 )))
@@ -152,19 +169,18 @@ void LandScapeEditor::TileMapMode()
 	// ============
 	//  Inform UI 
 	// ============
+	ImGui::Text("TileSize");
+	ImGui::SameLine(150);
+	ImGui::SetNextItemWidth(100);
+	int TileSize = (int)pTilemap->GetTileSize().x;
+	if (ImGui::InputInt("##TileSiez_LandscapeEditor", &TileSize, 0, 0))
+		pTilemap->SetTileSize(Vec2{ TileSize , TileSize });
 
 	ImGui::Text("Atlas Tile Count");
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(100);
 	int TileCount[2] = { (int)pTilemap->GetAtlasTileCount().x, (int)pTilemap->GetAtlasTileCount().y };
 	ImGui::InputInt2("##TileCountinAtlas", TileCount, ImGuiInputTextFlags_ReadOnly);
-
-	ImGui::Text("TileSize");
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(100);
-	int TileSize = (int)pTilemap->GetTileSize().x;
-	ImGui::InputInt("##TileSiez_LandscapeEditor", &TileSize, 0, 0);
-	pTilemap->SetTileSize(Vec2{ TileSize , TileSize });
 
 	// ====================
 	//  Show Selected Tile
@@ -175,10 +191,15 @@ void LandScapeEditor::TileMapMode()
 	ImGui::SetNextItemWidth(100);
 	ImGui::InputInt("##CurrentlySelectedTileIndex", &m_iCurTileIdx, 0, 0, ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_AlwaysInsertMode);
 	// show selected tile
-	if (m_iCurTileIdx != -1)
+	if (nullptr != pAtlasTexture && m_iCurTileIdx != -1)
 	{
-		int iCurTileCol = m_iCurTileIdx % (int)(pTilemap->GetAtlasTileCount().x);
-		int iCurTileRow = m_iCurTileIdx / (int)(pTilemap->GetAtlasTileCount().x);
+		int iCurTileCol = 0; 
+		int iCurTileRow = 0;
+		if (pTilemap->GetAtlasTileCount().x != 0)
+		{
+			iCurTileCol = m_iCurTileIdx % (int)(pTilemap->GetAtlasTileCount().x);
+			iCurTileRow = m_iCurTileIdx / (int)(pTilemap->GetAtlasTileCount().x);
+		}
 		ImVec2 vTileStartUV = ImVec2
 		{	
 			iCurTileCol * pTilemap->GetTileSize().x / pTilemap->GetAtlasTex()->Width(),
@@ -245,50 +266,62 @@ void LandScapeEditor::TileMapMode()
 	draw_list->PushClipRect(display_p0, display_p1, true);
 
 	// Draw the tileset
-	ImVec2 tileset_p0 = ImVec2(origin.x, origin.y);
-	ImVec2 tileset_p1 = ImVec2(origin.x + (pAtlasTexture->Width() / zoom), origin.y + (pAtlasTexture->Height() / zoom));
-	draw_list->AddImage(pAtlasTexture->GetSRV().Get(), tileset_p0, tileset_p1, ImVec2(0, 0), ImVec2(1, 1));
+	if (nullptr != pAtlasTexture)
+	{
+		ImVec2 tileset_p0 = ImVec2(origin.x, origin.y);
+		ImVec2 tileset_p1 = ImVec2(origin.x + (pAtlasTexture->Width() / zoom), origin.y + (pAtlasTexture->Height() / zoom));
+		draw_list->AddImage(pAtlasTexture->GetSRV().Get(), tileset_p0, tileset_p1, ImVec2(0, 0), ImVec2(1, 1));
 
-	// Get the currently hovered + active tile
-	// And set the current tile on click
-	ImVec2 zoomed_tileSize = ImVec2{ pTilemap->GetTileSize().x / zoom, pTilemap->GetTileSize().y / zoom };
-	if (is_hovered) {
-		// calculate mouse pos on atlas
-		float mx = (mouse_pos_in_display.x);
-		float my = (mouse_pos_in_display.y);
+		// Get the currently hovered + active tile
+		// And set the current tile on click
+		ImVec2 zoomed_tileSize = ImVec2{ pTilemap->GetTileSize().x / zoom, pTilemap->GetTileSize().y / zoom };
+		if (is_hovered) {
+			// calculate mouse pos on atlas
+			float mx = (mouse_pos_in_display.x);
+			float my = (mouse_pos_in_display.y);
 
-		// check if mouse is intersecting atlas
-		float atlasW = pAtlasTexture->Width() / zoom;
-		float atlasH = pAtlasTexture->Height() / zoom;
-		if (mx > 0 && mx < atlasW && my > 0 && my < atlasH) {
-			int tile_col = (int)(mx / zoomed_tileSize.x);
-			int tile_row = (int)(my / zoomed_tileSize.y);
+			// check if mouse is intersecting atlas
+			float atlasW = pAtlasTexture->Width() / zoom;
+			float atlasH = pAtlasTexture->Height() / zoom;
+			if (mx > 0 && mx < atlasW && my > 0 && my < atlasH) {
+				int tile_col = (int)(mx / zoomed_tileSize.x);
+				int tile_row = (int)(my / zoomed_tileSize.y);
 
-			// draw tile highlight
-			ImVec2 hover_p0 = ImVec2(tileset_p0.x + (zoomed_tileSize.x * tile_col), tileset_p0.y + (zoomed_tileSize.y * (tile_row)));
-			ImVec2 hover_p1 = ImVec2(hover_p0.x + zoomed_tileSize.x, hover_p0.y + zoomed_tileSize.y);
-			draw_list->AddRectFilled(hover_p0, hover_p1, IM_COL32(120, 120, 120, 120));
+				// draw tile highlight
+				ImVec2 hover_p0 = ImVec2(tileset_p0.x + (zoomed_tileSize.x * tile_col), tileset_p0.y + (zoomed_tileSize.y * (tile_row)));
+				ImVec2 hover_p1 = ImVec2(hover_p0.x + zoomed_tileSize.x, hover_p0.y + zoomed_tileSize.y);
+				draw_list->AddRectFilled(hover_p0, hover_p1, IM_COL32(120, 120, 120, 120));
 
 
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-				// calculate tile ID
-				float tilesPerRow = pTilemap->GetAtlasTileCount().x;
-				float tileSetId = pTilemap->GetAtlasTileCount().x * pTilemap->GetAtlasTileCount().y;
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+					// calculate tile ID
+					float tilesPerRow = pTilemap->GetAtlasTileCount().x;
+					float tileSetId = pTilemap->GetAtlasTileCount().x * pTilemap->GetAtlasTileCount().y;
 
-				// X and Y are reversed because of UV flip when drawing tileset atlas (see above
-				// @AddImage)
-				float tile_id = tile_col + (tile_row * tilesPerRow);
+					// X and Y are reversed because of UV flip when drawing tileset atlas (see above
+					// @AddImage)
+					float tile_id = tile_col + (tile_row * tilesPerRow);
 
-				// set current tile
-				m_iCurTileIdx = tile_id;
+					// set current tile
+					m_iCurTileIdx = tile_id;
+				}
 			}
 		}
-		
 	}
 }
 
 void LandScapeEditor::ColliderMode()
 {
+	// Layer
+	//ImGui::Text("Layer");
+	//ImGui::SameLine();
+	//char buffer[256] = {};
+	//std::strcpy(buffer, std::to_string(m_pTargetGameObject->GetLayerIndex()).c_str()) + m;
+	//ImGui::InputText("##LayerBox", );
+	// 충돌 체크 박스
+
+	// Type 설정
+
 }
 
 void LandScapeEditor::PrefabMode()

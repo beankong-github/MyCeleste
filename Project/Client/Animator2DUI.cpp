@@ -36,23 +36,58 @@ void Animator2DUI::render_update()
 
 	if (ImGui::Button("Create 2D Animation##1"))
 	{
-		//pCreate2DAnimUI->SetTargetObj(GetTargetObject());
-
-		pCreate2DAnimUI->Activate();
+		if(!pCreate2DAnimUI->IsActive())
+			pCreate2DAnimUI->Activate();
 	}
 
-	ImGui::Bullet();
-	ImGui::Text("Animation List");
-	ImGui::SameLine(0.f, 10.f);
 
+	ImGui::Text("Default Animation");
+	ImGui::SameLine(100.f, 10.f);
+	CAnimation2D* pDefault = GetTargetObject()->Animator2D()->GetDefaultAnim();
+	string defaultAnim;
+	if (nullptr != pDefault) defaultAnim = ToString(GetTargetObject()->Animator2D()->GetDefaultAnim()->GetName());
+	else
+		defaultAnim = "NONE";
 	// 애니메이션 결정할 ComboBox
 	if (m_vecAnimList.size() > 0)
 	{
-		if (ImGui::BeginCombo("##Animation List Combo_1", m_vecAnimList[m_iAnimIdx].c_str()))
+		if (ImGui::BeginCombo("##Animation List Combo_1", defaultAnim.c_str()))
 		{
 			for (int i = 0; i < m_vecAnimList.size(); i++)
 			{
 				//if (ImGui::IsItemHovered(ImGuiHoveredFlags_))
+				if (m_vecAnimList[i] == "")
+					continue;
+
+				if (ImGui::Selectable(m_vecAnimList[i].c_str()))
+				{
+					wstring _wStr = wstring(m_vecAnimList[i].begin(), m_vecAnimList[i].end());
+					GetTargetObject()->Animator2D()->SetDefaultAnim(_wStr);
+				}
+			}
+			ImGui::EndCombo();
+		}
+	}
+
+	ImGui::Text("Current Animation");
+	ImGui::SameLine(100.f, 10.f);
+	CAnimation2D* pCur = GetTargetObject()->Animator2D()->GetCurAnim();
+	string curAnim;
+	if (nullptr != pCur)
+		curAnim = ToString(pCur->GetName());
+	else
+		curAnim = "NONE";
+
+	// 애니메이션 결정할 ComboBox
+	if (m_vecAnimList.size() > 0)
+	{
+		if (ImGui::BeginCombo("##Animation List Combo_2", curAnim.c_str()))
+		{
+			for (int i = 0; i < m_vecAnimList.size(); i++)
+			{
+				//if (ImGui::IsItemHovered(ImGuiHoveredFlags_))
+				if (m_vecAnimList[i] == "")
+					continue;
 				if (ImGui::Selectable(m_vecAnimList[i].c_str()))
 				{
 					m_iAnimIdx = i;
@@ -75,9 +110,23 @@ void Animator2DUI::Activate()
 	pCreate2DAnimUI = (Create2DAnimationUI*)CImGuiMgr::GetInst()->FindUI("Create 2D Animation UI");
 	if (pCreate2DAnimUI != nullptr)
 	{
-		pCreate2DAnimUI->SetAddListEvent(this, (AnimListEvent)&Animator2DUI::AddAnimList);
+		pCreate2DAnimUI->SetAddListEvent(this, (AnimListEvent)&Animator2DUI::UpdateAnimList);
 		pCreate2DAnimUI->SetTargetObj(GetTargetObject());
 	}
+	
+	UpdateAnimList();
+
+}
+
+void Animator2DUI::Deactivate()
+{
+	UI::Deactivate();
+	pCreate2DAnimUI = nullptr;
+}
+
+void Animator2DUI::UpdateAnimList(DWORD_PTR _param)
+{
+	m_vecAnimList.clear();
 
 	const map<wstring, CAnimation2D*>& animList = GetTargetObject()->Animator2D()->GetAnimList();
 
@@ -85,19 +134,4 @@ void Animator2DUI::Activate()
 	{
 		m_vecAnimList.push_back(string(pair.first.begin(), pair.first.end()));
 	}
-
-}
-
-void Animator2DUI::Deactivate()
-{
-	UI::Deactivate();
-
-	pCreate2DAnimUI = nullptr;
-}
-
-void Animator2DUI::AddAnimList(DWORD_PTR _param)
-{
-	string AnimName = (char*)_param;
-
-	m_vecAnimList.push_back(AnimName);
 }

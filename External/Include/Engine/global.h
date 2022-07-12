@@ -16,6 +16,14 @@ using namespace::DirectX::PackedVector;
 #pragma comment(lib, "dxguid")
 
 
+//CMakrUP
+#include <CMarkup/Markup.h>
+#ifdef _DEBUG
+#pragma comment(lib,"CMarkup/CMarkUp_debug")
+#else
+#pragma comment(lib,"CMarkup/CMarkUp")
+#endif
+
 #include "SimpleMath.h"
 using namespace DirectX::SimpleMath;
 

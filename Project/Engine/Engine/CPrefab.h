@@ -20,7 +20,10 @@ public:
 public:
     CGameObject* Instantiate();
     CGameObject* GetProto() { return m_pProtoObj; }
-    void SetProto(CGameObject* _pProto) { m_pProtoObj = _pProto; }
+    void SetProto(CGameObject* _pProto) {
+        m_pProtoObj = _pProto;
+        Changed();
+    }
 
 public:
     virtual int Save(const wstring& _strFilePath);

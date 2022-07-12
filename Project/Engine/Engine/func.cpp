@@ -92,7 +92,8 @@ const wchar_t* ToWString(RES_TYPE _type)
         L"MESH",
         L"TEXTURE",
         L"SOUND",
-        L"SCENEFILE"
+        L"SCENEFILE",
+        L"XMLDATA"
     };
 
     return szWString[(UINT)_type];
@@ -110,7 +111,8 @@ const char* ToString(RES_TYPE _type)
         "MESH",
         "TEXTURE",
         "SOUND",
-        "SCENEFILE"
+        "SCENEFILE",
+        "XMLDATA"
     };
 
     return szString[(UINT)_type];
@@ -118,11 +120,11 @@ const char* ToString(RES_TYPE _type)
 
 std::wstring ToWString(const std::string& str)
 {
-    //wstring wstr(str.begin(), str.end());
-    const int    length = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
+    const int length = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
     std::wstring wstr{};
     wstr.resize(length);
     MultiByteToWideChar(CP_ACP, 0, &str[0], -1, &wstr[0], length);
+    wstr.pop_back();
     return wstr;
 }
 
@@ -132,5 +134,6 @@ std::string ToString(const std::wstring& wstr)
     std::string str{};
     str.resize(length);
     WideCharToMultiByte(CP_ACP, 0, &wstr[0], -1, &str[0], length, nullptr, nullptr);
+    str.pop_back();
     return str;
 }

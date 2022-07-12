@@ -8,9 +8,9 @@ StructuredBuffer<tTileData> TileDataBuffer : register(t16);
 
 // ==============
 // TileMap Shader
-// Domain : Mask
-// Blend : Default
-// Depth : LESS
+// Domain : Translucent
+// Blend : Alpha_Blend
+// Depth : No_Write
 #define TileCountX g_int_0
 #define TileCountY g_int_1
 #define SliceSizeUV g_vec2_0

@@ -33,7 +33,7 @@ CGameObject::CGameObject(const CGameObject& _origin)
 	, m_arrCom{}
 	, m_pParent(nullptr)
 	, m_pRenderComponent(nullptr)
-	, m_iLayerIdx(-1)
+	, m_iLayerIdx(_origin.m_iLayerIdx)
 	, m_bActive(true)
 	, m_bDead(false)
 	, m_bDynamicShadow(false)

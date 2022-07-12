@@ -28,4 +28,20 @@ void CEntity::SaveToScene(FILE* _pFile)
 void CEntity::LoadFromScene(FILE* _pFile)
 {
 	LoadWStringFromFile(m_strName, _pFile);
+
+	//CMarkup xml;
+	//xml.Load(L"text.xml");
+
+	//if (xml.FindElem(L"texture"))
+	//{
+	//	std::wstring width = xml.GetAttrib(L"width");
+	//	if (width.empty())
+	//	{
+
+	//	}
+	//	xml.IntoElem();
+	//	xml.OutOfElem();
+
+	//}
+
 }

@@ -75,9 +75,15 @@ cbuffer GLOBAL : register(b3)
     float2  vResolution;
     float2  vNoiseResolution;
     float   fDT;
-    float fAccTime;
-    int iLight2DCount;
-    int iLight3DCount;
+    float   fAccTime;
+    int     iLight2DCount;
+    int     iLight3DCount;
+}
+
+cbuffer SPRITE : register(b4)
+{
+    float2 s_vPos;    
+    float2 s_vSize;
 }
 
 Texture2D g_tex_0 : register(t0);

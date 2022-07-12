@@ -16,8 +16,8 @@
 CAnimator2D::CAnimator2D() :
 	CComponent(COMPONENT_TYPE::ANIMATOR2D),
 	m_pCurAnim(nullptr),
-	m_playAnimKey{}
-	//m_bRepeat(false)
+	m_playAnimKey{},
+	m_pDefaultAnim(nullptr)
 {
 	CreateDummyAnim(L"Dummy", 1);
 }
@@ -38,6 +38,12 @@ CAnimator2D::CAnimator2D(const CAnimator2D& _origin) :
 	{
 		m_pCurAnim = FindAnim(_origin.m_pCurAnim->GetName());
 	}
+
+	if (nullptr != _origin.m_pDefaultAnim)
+	{
+		m_pDefaultAnim = FindAnim(_origin.m_pDefaultAnim->GetName());
+	}
+
 }
 
 CAnimator2D::~CAnimator2D()
@@ -64,7 +70,7 @@ void CAnimator2D::finalupdate()
 	else if (m_pCurAnim->IsReset() && !m_pCurAnim->IsRepeat())
 	{
 		m_pCurAnim->Reset();
-		m_pCurAnim = nullptr;
+		m_pCurAnim = m_pDefaultAnim;
 	}
 }
 
@@ -95,11 +101,16 @@ CAnimation2D* CAnimator2D::FindAnim(const wstring& _strName)
 	return iter->second;
 }
 
+
 void CAnimator2D::CreateAnim(const wstring& _strName, Ptr<CTexture> _pAtlas, Vec2 _vBackgroundSizePixel, Vec2 _vLeftTopPixel, Vec2 _vSlicePixel, Vec2 _vStepPixel,      float _fDuration, int _iFrameCount, bool _bRepeat)
 {
-	//if (nullptr != FindAnim(_strName)) return;
-	//Animation 이름 중복 방지 assert
-    assert(!FindAnim(_strName));
+	// 이름이 겹치는 애니메이션이 있으면 기존의 애니메이션을 삭제하고 새로 저장한다
+	const map<wstring, CAnimation2D*>::iterator iter = m_mapAnim.find(_strName);
+	if (iter != m_mapAnim.end())
+	{
+		delete(iter->second);
+		m_mapAnim.erase(iter);
+	}
     
     CAnimation2D* anim = new CAnimation2D;
     anim->SetName(_strName);
@@ -117,38 +128,47 @@ void CAnimator2D::CreateDummyAnim(const wstring& _strName, int _iIsDummy)
 	anim->SetName(_strName);
 	anim->CreateDummy(_iIsDummy);
 
-	m_mapAnim.insert(make_pair(_strName, anim));
+	auto result = m_mapAnim.insert(make_pair(_strName, anim));
+	assert(result.first != m_mapAnim.end());
 	anim->m_pOwner = this;
 }
 
 void CAnimator2D::AddAnim(const string& _strName, CAnimation2D* _pAnim)
 {
 	wstring _wStrName = wstring(_strName.begin(), _strName.end());
-
-	assert(!FindAnim(_wStrName));
+	
+	// 이름이 겹치는 애니메이션이 있으면 기존의 애니메이션을 삭제하고 새로 저장한다
+	const map<wstring, CAnimation2D*>::iterator iter = m_mapAnim.find(ToWString(_strName));
+	if (iter != m_mapAnim.end())
+	{
+		delete(iter->second);
+		m_mapAnim.erase(iter);
+	}
 
 	m_mapAnim.insert(make_pair(_wStrName, _pAnim));
 
 	_pAnim->m_pOwner = this;
 }
 
-void CAnimator2D::Play(const wstring& _strName)
+void CAnimator2D::SetDefaultAnim(const wstring& _strName)
 {
-	//인자로 들어온 문자열과 재생중신 애니메이션 이름 같으면 리턴
-	if (nullptr != m_pCurAnim && m_pCurAnim->GetName() == _strName) return;
-
 	CAnimation2D* pAnim = FindAnim(_strName);
 
 	assert(pAnim);
 
-	if (nullptr == m_pCurAnim) 
-	{ 
-		m_pCurAnim = pAnim; 
-		m_playAnimKey = _strName;
-		return; 
-	}
+	m_pDefaultAnim = pAnim;
+}
+
+void CAnimator2D::Play(const wstring& _strName)
+{
+	//인자로 들어온 문자열과 재생중신 애니메이션 이름 같으면 리턴
+	if (m_pCurAnim != nullptr && m_pCurAnim->GetName() == _strName) return;
+
+	CAnimation2D* pAnim = FindAnim(_strName);
+
+	assert(pAnim);
 	//기존에 재생중이었던 애니메이션 리셋
-	else if (nullptr != m_pCurAnim) 
+	if (nullptr != m_pCurAnim) 
 		m_pCurAnim->Reset();
 
 	//애니메이션 교체
@@ -171,9 +191,12 @@ void CAnimator2D::SaveToScene(FILE* _pFile)
 	}
 
 	wstring strCurAnimName;
+	wstring strDefaultName;
 	if (nullptr != m_pCurAnim) strCurAnimName = m_pCurAnim->GetName();
+	if (nullptr != m_pDefaultAnim) strDefaultName = m_pDefaultAnim->GetName();
 
 	SaveWStringToFile(strCurAnimName, _pFile);
+	SaveWStringToFile(strDefaultName, _pFile);
 
 	//fwrite(&m_bRepeat, sizeof(bool), 1, _pFile);
 }
@@ -190,14 +213,24 @@ void CAnimator2D::LoadFromScene(FILE* _pFile)
 		CAnimation2D* pAnim = new CAnimation2D;
 		pAnim->LoadFromScene(_pFile);
 
-		m_mapAnim.insert(make_pair(pAnim->GetName(), pAnim));
+		
+		auto iter = m_mapAnim.insert(make_pair(pAnim->GetName(), pAnim));
+		if (false == iter.second)
+		{
+			delete pAnim;
+			continue;
+		}
 		pAnim->m_pOwner = this;
 	}
 
 	wstring strCurAnimName;
 	LoadWStringFromFile(strCurAnimName, _pFile);
 
+	wstring strDefaultName;
+	LoadWStringFromFile(strDefaultName, _pFile);
+
 	m_pCurAnim = FindAnim(strCurAnimName);
+	m_pDefaultAnim = FindAnim(strDefaultName);
 
 	//fwrite(&m_bRepeat, sizeof(bool), 1, _pFile);
 }
