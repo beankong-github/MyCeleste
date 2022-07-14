@@ -27,9 +27,9 @@ void CTransform::finalupdate()
 		if (nullptr != MeshRender() && nullptr != MeshRender()->GetTexInfo())
 		{
 			Vec2 Size = MeshRender()->GetTexInfo()->vSize;
-			if (Size.x != 0)
+			if (Size.x > 0 && Size.y > 0)
 			{
-				Vec3 relativeSize = Vec3(m_vRelativeScale.x, m_vRelativeScale.x * Size.y / Size.x, m_vRelativeScale.z);
+				Vec3 relativeSize = Vec3(m_vRelativeScale.x,m_vRelativeScale.x * Size.y / Size.x, m_vRelativeScale.z);
 				SetRelativeScale(relativeSize);
 			}
 		}

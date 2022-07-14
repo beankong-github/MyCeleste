@@ -30,6 +30,8 @@ void CToolObjMgr::init()
 	pToolObj->AddComponent(new CEditorCamScript);
 
 	pToolObj->Camera()->SetProjType(PROJ_TYPE::ORTHOGRAPHIC);
+	pToolObj->Camera()->SetWidth(320);
+	pToolObj->Camera()->SetAspectRatio(1.778f);
 	pToolObj->Camera()->SetFar(10000);
 	pToolObj->Camera()->CheckLayerMaskAll();
 

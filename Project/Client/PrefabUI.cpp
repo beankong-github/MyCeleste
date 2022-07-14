@@ -52,18 +52,18 @@ void PrefabUI::ShowOBJInfo()
 		ImGui::InputText("##ObjName", buffer, 256, ImGuiInputTextFlags_ReadOnly);
 
 		// OBJ Layer 표시
-		ImGui::Text("Layer");
-		ImGui::SameLine();
+		//ImGui::Text("Layer");
+		//ImGui::SameLine();
 
-		int curIdx = pProto->GetLayerIndex();
+		//int curIdx = pProto->GetLayerIndex();
 
 
-		char buffer2[256] = {};
-		CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-		string strLayer = std::to_string(pProto->GetLayerIndex()) + " : " + ToString(pCurScene->GetLayer(curIdx)->GetName());
-		strcpy_s(buffer2, strLayer.c_str());
+		//char buffer2[256] = {};
+		//CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+		//string strLayer = std::to_string(pProto->GetLayerIndex()) + " : " + ToString(pCurScene->GetLayer(curIdx)->GetName());
+		//strcpy_s(buffer2, strLayer.c_str());
 
-		ImGui::InputText("##LayerName", buffer2, 256, ImGuiInputTextFlags_ReadOnly);
+		//ImGui::InputText("##LayerName", buffer2, 256, ImGuiInputTextFlags_ReadOnly);
 
 		// 프리팹 Instatiate 버튼
 		ImGui::TableNextColumn();
@@ -73,7 +73,7 @@ void PrefabUI::ShowOBJInfo()
 
 			info.eType = EVENT_TYPE::CREATE_OBJ;
 			info.lParam = (DWORD_PTR)pTargetPref->Instantiate();
-			info.wParam = (DWORD_PTR)1;
+			info.wParam = (DWORD_PTR)1;		// 프리팹은 기본적으로 레이어 1
 
 			CEventMgr::GetInst()->AddEvent(info);
 		}

@@ -75,7 +75,7 @@ void Animator2DUI::render_update()
 	string curAnim;
 	if (nullptr != pCur)
 		curAnim = ToString(pCur->GetName());
-	else
+	if (nullptr == pCur || "" == curAnim)
 		curAnim = "NONE";
 
 	// 애니메이션 결정할 ComboBox

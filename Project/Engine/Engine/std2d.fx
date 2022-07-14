@@ -162,28 +162,13 @@ float4 PS_Std2DAlpha(VTX_OUT _in) : SV_Target
 }
 
 
-
-// ================
-// 
-// ================
-
-
-
-
-
-
-
-
-
-
-
 // ==================
 // Collider2D Shader
 // g_int_0 : Collision
 // ==================
 VTX_OUT VS_Collider2D(VTX_IN _in)
 {
-    VTX_OUT output = (VTX_OUT) 0.f;
+    VTX_OUT output = (VTX_OUT) 0.f; 
     
     output.vPosition = mul(float4(_in.vPos, 1.f), g_matWVP);
     output.vUV = _in.vUV;

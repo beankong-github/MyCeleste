@@ -12,7 +12,7 @@
 
 CMeshRender::CMeshRender()
 	: CRenderComponent(COMPONENT_TYPE::MESHRENDER)
-	, m_tTexInfo{}
+	, m_tTexInfo(nullptr)
 {
 }
 
@@ -63,6 +63,8 @@ void CMeshRender::render()
 			{
 				tInfo.vPos = Vec2{ 0.f, 0.f };
 				tInfo.vSize = Vec2{ 1.f, 1.f };
+
+				m_tTexInfo = &tInfo;
 			}
 			else
 			{
@@ -99,8 +101,6 @@ void CMeshRender::SaveToScene(FILE* _pFile)
 	SaveWStringToFile(m_strAtlasKey, _pFile);
 	// Sprite Key 저장
 	SaveWStringToFile(m_strSpriteKey, _pFile);
-	// TexInfo 저장
-	fwrite(&m_tTexInfo, sizeof(tSprite), 1, _pFile);
 }
 
 void CMeshRender::LoadFromScene(FILE* _pFile)
@@ -112,8 +112,6 @@ void CMeshRender::LoadFromScene(FILE* _pFile)
 	LoadWStringFromFile(m_strAtlasKey, _pFile);
 	// Sprite Key	로드
 	LoadWStringFromFile(m_strSpriteKey, _pFile);
-	// TexInfo 로드
-	fread_s(&m_tTexInfo, sizeof(tSprite), sizeof(tSprite), 1, _pFile);
 }
 
 

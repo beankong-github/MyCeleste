@@ -60,12 +60,13 @@ void TransformUI::render_update()
 
 	ImGui::Text("IngnoreParentScale");
 	ImGui::SameLine();
-	bool ignore = pTrans->IsIgnoreParentScale();
-	ImGui::Checkbox("##IngPrntScale", &ignore);
-
+	m_bignore = pTrans->IsIgnoreParentScale();
+	if(ImGui::Checkbox("##IngPrntScale", &m_bignore))
+		pTrans->SetIgnoreParentScale(m_bignore);
 
 	ImGui::Text("SameRatioWithSprite");
 	ImGui::SameLine();
-	bool same = pTrans->IsSameRatioWithSprite();
-	ImGui::Checkbox("##IngPrntScale", &same);
+	m_bsame= pTrans->IsSameRatioWithSprite();
+	if(ImGui::Checkbox("##SameRatio", &m_bsame))
+		pTrans->SetSameRatioWithSprite(m_bsame);
 }

@@ -10,6 +10,9 @@ private:
     Vec3 m_vRelativeScale;
     Vec3 m_vRelativeRot;
 
+    bool m_bignore;
+    bool m_bsame;
+
 
 public:
     virtual void update() override;
