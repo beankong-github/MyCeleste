@@ -65,3 +65,14 @@ void CEditorCamScript::update()
 	}
 
 }
+
+void CEditorCamScript::SaveToScene(FILE* _pFile)
+{
+	//CEntity::SaveToScene(_pFile);
+	fwrite(&m_fSpeed, sizeof(float), 1, _pFile);
+}
+
+void CEditorCamScript::LoadFromScene(FILE* _pFile)
+{
+	fread(&m_fSpeed, sizeof(float), 1, _pFile);
+}

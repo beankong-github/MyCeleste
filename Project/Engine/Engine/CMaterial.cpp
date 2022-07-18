@@ -14,6 +14,7 @@ CMaterial::CMaterial()
 	: CRes(RES_TYPE::MATERIAL)
 	, m_pShader(nullptr)
 	, m_arrTex{}
+	, m_Param{}
 	, m_pMasterMtrl(nullptr)
 {
 }
@@ -41,8 +42,11 @@ void CMaterial::UpdateData()
 			CTexture::Clear(i);
 			m_Param.bTex[i] = 0;	// 텍스처 array의 i번째에 텍스처가 없다고 표시
 		}
+
+		m_arrTex[0] = nullptr;
 	}
 	
+
 	// 2. Const  Buffer
 	// 상수 버퍼에 파라미터를 세팅해주고 각 렌더링 파이프라인 쉐이더 단계에 전달한다.
 	CConstBuffer* pCB = CDevice::GetInst()->GetCB(CB_TYPE::SCALAR_PARAM);

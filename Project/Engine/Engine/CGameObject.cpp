@@ -18,6 +18,7 @@
 
 CGameObject::CGameObject()
 	: m_arrCom{}
+	, m_vecScript{}
 	, m_pParent(nullptr)
 	, m_pRenderComponent(nullptr)
 	, m_iLayerIdx(-1)
@@ -152,15 +153,20 @@ void CGameObject::finalupdate()
 
 void CGameObject::render()
 {
-	if (m_pRenderComponent->IsActive())
+	if (m_pRenderComponent != nullptr && m_pRenderComponent->IsActive())
 		m_pRenderComponent->render();
 
+#ifdef _DEBUG
 	if (nullptr != Collider2D())
 		Collider2D()->render();
+#endif // _DEBUG
 }
 
 CScript* CGameObject::GetScript(UINT _iIdx)
 {
+	if (_iIdx >= m_vecScript.size())
+		return nullptr;
+
 	return m_vecScript[_iIdx];
 }
 
@@ -214,6 +220,16 @@ void CGameObject::deactive()
 	{
 		m_vecChild[i]->deactive();
 	}
+}
+
+CGameObject* CGameObject::FindChild(wstring _name)
+{
+	for (int i = 0; i < m_vecChild.size(); ++i)
+	{
+		if (_name == m_vecChild[i]->GetName())
+			return m_vecChild[i];
+	}
+	return nullptr;
 }
 
 void CGameObject::Deregister()
@@ -378,7 +394,7 @@ void CGameObject::SaveToScene(FILE* _pFile)
 	//  상태값 저장
 	// ============
 	// m_iLayer
-	// fwrite(&m_iLayerIdx, sizeof(int), 1, _pFile);
+	//fwrite(&m_iLayerIdx, sizeof(int), 1, _pFile);
 
 	// m_bActive;
 	// m_bDynamicShadow;

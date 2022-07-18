@@ -29,6 +29,7 @@ public:
 	void AddAnim(const string& _strName, CAnimation2D* _pAnim);
 
 	void Play(const wstring& _strName);
+	void PlayDefaultAnim();
 
 public:
 	virtual void finalupdate() override;

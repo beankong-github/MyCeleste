@@ -2,13 +2,18 @@
 #include "LandScapeEditor.h"
 
 #include <Engine\CKeyMgr.h>
+#include <Engine\CResMgr.h>
+#include <Engine\CSceneMgr.h>
+#include <Engine\CCollisionMgr.h>
 
 #include <Engine\CTileMap.h>
-#include <Engine\CResMgr.h>
 #include <Engine\CCore.h>
 #include <Engine\CCamera.h>
-#include <Engine\CSceneMgr.h>
+#include <Engine\CScene.h>
+#include <Engine\CLayer.h>
 #include <Engine\CTransform.h>
+#include <Engine\CCollider2D.h>
+#include <Script\CCollider2DScript.h>
 
 #include "CImGuiMgr.h"
 #include "TileMapEditor.h"
@@ -40,31 +45,29 @@ void LandScapeEditor::SetTargetObject(CGameObject* _pObj)
 
 void LandScapeEditor::update()
 {
-	if (LS_EDIT_TYPE::TILE_MAP == m_eType)
+	if (IsActive())
 	{
-		if (IsActive())
+		if (nullptr == m_pTileMapEditor)
 		{
-			if (nullptr == m_pTileMapEditor)
-			{
-				m_pTileMapEditor = (TileMapEditor*)CImGuiMgr::GetInst()->FindUI("TileMapEditor");
-			}
-			if (!m_pTileMapEditor->IsActive())
-			{
-				m_pTileMapEditor->SetTargetObject(m_pTargetGameObject);
-
-				m_pTileMapEditor->Activate();
-			}
+			m_pTileMapEditor = (TileMapEditor*)CImGuiMgr::GetInst()->FindUI("TileMapEditor");
+			m_pTileMapEditor->SetTargetObject(m_pTargetGameObject);
 		}
-		else
+		if (!m_pTileMapEditor->IsActive())
 		{
-			if (nullptr != m_pTileMapEditor)
-			{ 
-				m_pTileMapEditor->Clear();
-				m_pTileMapEditor->Deactivate();
-				m_pTileMapEditor = nullptr;
-			}
+			m_pTileMapEditor->SetTargetObject(m_pTargetGameObject);
+			m_pTileMapEditor->Activate();
 		}
 	}
+	else
+	{
+		if (nullptr != m_pTileMapEditor)
+		{ 
+			m_pTileMapEditor->Clear();
+			m_pTileMapEditor->Deactivate();
+			m_pTileMapEditor = nullptr;
+		}
+	}
+
 	
 	if (KEY_TAP(KEY::ESC))
 	{
@@ -173,7 +176,7 @@ void LandScapeEditor::TileMapMode()
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(100);
 	int TileSize = (int)pTilemap->GetTileSize().x;
-	if (ImGui::InputInt("##TileSiez_LandscapeEditor", &TileSize, 0, 0))
+	if (ImGui::InputInt("##TileSize_LandscapeEditor", &TileSize, 0, 0))
 		pTilemap->SetTileSize(Vec2{ TileSize , TileSize });
 
 	ImGui::Text("Atlas Tile Count");
@@ -312,16 +315,52 @@ void LandScapeEditor::TileMapMode()
 
 void LandScapeEditor::ColliderMode()
 {
-	// Layer
-	//ImGui::Text("Layer");
-	//ImGui::SameLine();
-	//char buffer[256] = {};
-	//std::strcpy(buffer, std::to_string(m_pTargetGameObject->GetLayerIndex()).c_str()) + m;
-	//ImGui::InputText("##LayerBox", );
-	// 충돌 체크 박스
+	// Tile 크기
+	ImGui::Text("Tile Size");
+	ImGui::SameLine(120); ImGui::SetNextItemWidth(180);
+	CTileMap* pTilemap = m_pTargetGameObject->TileMap();
+	int TileSize = (int)pTilemap->GetTileSize().x;
+	if (ImGui::InputInt("##TileSize_LandscapeEditor", &TileSize, 0, 0))
+		pTilemap->SetTileSize(Vec2{ TileSize , TileSize });
+	
+	// 모든 자식 Collider 들의 이름과 크기, 타입을 가져 옴
+	vector<CGameObject*> childs = m_pTargetGameObject->GetChild();
+	for (size_t i = 0; i < childs.size(); ++i)
+	{
+		if (nullptr == childs[i]->Collider2D())
+			continue;
 
-	// Type 설정
+		ImGui::Separator();
 
+		// Collider 이름
+		string name = ToString(childs[i]->GetName());
+		if (ImGui::Button(name.c_str()))
+		{
+			if (nullptr != m_pTileMapEditor)
+			{
+				m_pTileMapEditor->SetSelectedCollider(childs[i]);
+			}
+		}
+
+		// Collider Offset
+		float pos[2] = {childs[i]->Collider2D()->GetOffsetPos().x
+			, childs[i]->Collider2D()->GetOffsetPos().y};
+		float size[2] = {childs[i]->Collider2D()->GetOffsetScale().x
+		, childs[i]->Collider2D()->GetOffsetScale().y };
+
+		ImGui::Text("Pos");
+		ImGui::SameLine(120); ImGui::SetNextItemWidth(180);
+		ImGui::InputFloat2("##Pos_Input", pos, "%3.f", ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::Text("Size");
+		ImGui::SameLine(120); ImGui::SetNextItemWidth(180);
+		ImGui::InputFloat2("##Size_Input", size, "%3.f", ImGuiInputTextFlags_ReadOnly);
+
+
+		// Collider Type
+		
+
+	}
 }
 
 void LandScapeEditor::PrefabMode()

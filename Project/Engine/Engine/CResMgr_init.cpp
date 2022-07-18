@@ -228,8 +228,8 @@ void CResMgr::CreateEngineShader()
 
 	// Collider2D Shader
 	pShader = new CGraphicsShader;
-	pShader->CreateVertexShader(L"Shader\\std2d.fx", "VS_Collider2D");
-	pShader->CreatePixelShader(L"Shader\\std2d.fx", "PS_Collider2D");
+	pShader->CreateVertexShader(L"shader\\std2d.fx", "VS_Collider2D");
+	pShader->CreatePixelShader(L"shader\\std2d.fx", "PS_Collider2D");
 	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_TRANSLUCENT);
 	pShader->SetBSType(BS_TYPE::ALPHA_BLEND);
 	pShader->SetDSType(DS_TYPE::NO_TEST_NO_WRITE);
@@ -242,9 +242,9 @@ void CResMgr::CreateEngineShader()
 
 	// Particle Render Shader
 	pShader = new CGraphicsShader;
-	pShader->CreateVertexShader(L"Shader\\particlerender.fx", "VS_ParticleRender");
-	pShader->CreateGeometryShader(L"Shader\\particlerender.fx", "GS_ParticleRender");
-	pShader->CreatePixelShader(L"Shader\\particlerender.fx", "PS_ParticleRender");
+	pShader->CreateVertexShader(L"shader\\particlerender.fx", "VS_ParticleRender");
+	pShader->CreateGeometryShader(L"shader\\particlerender.fx", "GS_ParticleRender");
+	pShader->CreatePixelShader(L"shader\\particlerender.fx", "PS_ParticleRender");
 
 	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_TRANSLUCENT);
 	pShader->SetTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
@@ -258,8 +258,8 @@ void CResMgr::CreateEngineShader()
 	pShader = new CGraphicsShader;
 
 	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_POSTPROCESS);
-	pShader->CreateVertexShader(L"Shader\\postprocess.fx", "VS_PostProcess");	
-	pShader->CreatePixelShader(L"Shader\\postprocess.fx", "PS_PostProcess");
+	pShader->CreateVertexShader(L"shader\\postprocess.fx", "VS_PostProcess");	
+	pShader->CreatePixelShader(L"shader\\postprocess.fx", "PS_PostProcess");
 	
 	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_POSTPROCESS);	
 	pShader->SetDSType(DS_TYPE::NO_TEST_NO_WRITE);

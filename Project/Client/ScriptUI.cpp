@@ -69,6 +69,13 @@ void ScriptUI::render_update()
 			m_pTargetScript->SetParam<Vec4>(vecParam[i].strParamName, data);
 		}
 			break;
+		case SCRIPTPARAM_TYPE::ENUM:
+		{
+			UINT data = ParamUI::Param_ENUM(vecParam[i].strParamName, (UINT*)vecParam[i].pParam, m_pTargetScript->GetEnumItemNames());
+			if(data != *(UINT*)vecParam[i].pParam)
+				m_pTargetScript->SetParam<UINT>(vecParam[i].strParamName, data);
+		}
+			break;
 
 		case SCRIPTPARAM_TYPE::TEX:
 			break;

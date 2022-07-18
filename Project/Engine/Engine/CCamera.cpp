@@ -11,6 +11,7 @@
 #include "CGameObject.h"
 #include "CTransform.h"
 #include "CMeshRender.h"
+#include "CCollider2D.h"
 
 #include "CResMgr.h"
 #include "CTimeMgr.h"
@@ -110,16 +111,25 @@ void CCamera::SortGameObject()
 		for (size_t j = 0; j < vecObj.size(); ++j)
 		{
 			CRenderComponent* pRenderCom = vecObj[j]->GetRenderComponent();
-		
-			if (nullptr == pRenderCom
-				|| nullptr == pRenderCom->GetMesh()
-				|| nullptr == pRenderCom->GetMaterial()
-				|| nullptr == pRenderCom->GetMaterial()->GetShader())
-			{
-				continue;
-			}
+			CCollider2D* pCol2D = vecObj[j]->Collider2D();
+			Ptr<CGraphicsShader> pShader = nullptr;
 
-			Ptr<CGraphicsShader> pShader = pRenderCom->GetMaterial()->GetShader();
+			if (nullptr != pRenderCom
+				&& nullptr != pRenderCom->GetMesh()
+				&& nullptr != pRenderCom->GetMaterial()
+				&& nullptr != pRenderCom->GetMaterial()->GetShader())
+				pShader = pRenderCom->GetMaterial()->GetShader();
+
+#ifdef _DEBUG
+			else if (nullptr != pCol2D
+				&& nullptr != pCol2D->GetCollider2DMesh()
+				&& nullptr != pCol2D->GetCollider2DMaterial()
+				&& nullptr != pCol2D->GetCollider2DMaterial()->GetShader())
+				pShader = pCol2D->GetCollider2DMaterial()->GetShader();
+#endif // _DEBUG
+
+			else
+				continue;
 
 			switch (pShader->GetShaderDomain())
 			{
@@ -131,7 +141,7 @@ void CCamera::SortGameObject()
 				break;
 			case SHADER_DOMAIN::DOMAIN_TRANSLUCENT:
 				m_vecTranslucent.push_back(vecObj[j]);
-				break;			
+				break;
 			case SHADER_DOMAIN::DOMAIN_POSTPROCESS:
 				m_vecPostProcess.push_back(vecObj[j]);
 				break;

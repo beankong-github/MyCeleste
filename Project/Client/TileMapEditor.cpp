@@ -1,21 +1,33 @@
 #include "pch.h"
 #include "TileMapEditor.h"
 
-#include <Engine/CTexture.h>
+#include <Engine\CTexture.h>
+#include <Engine\CCollider2D.h>
+#include <Engine\CSceneMgr.h>
+#include <Engine\CScene.h>
+#include <Engine\CTransform.h>
+#include "CImGuiMgr.h"
+#include "SceneOutliner.h"
+#include <Script\CCollider2DScript.h>
 
 TileMapEditor::TileMapEditor()
 	: UI("TileMapEditor")
 	, m_pTargetGameObject(nullptr)
 	, m_pTargetTileMap(nullptr)
     , m_pLSEditor(nullptr)
+    , m_pSelecterCol(nullptr)
+    , m_vOffsetPos{ 0.f , }
+    , m_vOffsetScale{0.f, }
 
 {
 	SetSize(Vec2{ 500, 0 });
 }
 
+
 TileMapEditor::~TileMapEditor()
 {
 }
+
 
 void TileMapEditor::SetTargetObject(CGameObject* _pObj)
 {
@@ -233,6 +245,43 @@ void TileMapEditor::render_update()
     draw_list->AddRect(origin, ImVec2{ origin.x + vZoomedTileMapSize.x,origin.y + vZoomedTileMapSize.y }, IM_COL32(255, 0, 0, 255));
 
 
+    // collider 그리기용 변수
+    static int rect[2] = { -1, -1 };
+
+    // canvas 밖에다 클릭하면 초기화
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        rect[0] = -1;
+        rect[1] = -1;
+    }
+    if (rect[0] != -1 && rect[1] != -1)
+    {
+        int startTile_col = rect[0] % iTileMapSizeBuffer[0];
+        int startTile_row = rect[0] / iTileMapSizeBuffer[0];
+        int endTile_col = rect[1] % iTileMapSizeBuffer[0];
+        int endTile_row = rect[1] / iTileMapSizeBuffer[0];
+        int colliderSize_x = (endTile_col - startTile_col + 1) * zoomed_tilesize.x;
+        int colliderSize_y = (endTile_row - startTile_row + 1) * zoomed_tilesize.y;
+        ImVec2 col_p0 = ImVec2(origin.x + (zoomed_tilesize.x * startTile_col), origin.y + (zoomed_tilesize.y * (startTile_row)));
+        ImVec2 col_p1 = ImVec2(col_p0.x + colliderSize_x, col_p0.y + colliderSize_y);
+        draw_list->AddRect(col_p0, col_p1, IM_COL32(0, 250, 0, 250));
+
+        Vec2 vRelativeTileSize = Vec2{ m_pTargetTileMap->Transform()->GetRelativeScale().x / iTileMapSizeBuffer[0],  m_pTargetTileMap->Transform()->GetRelativeScale().y / iTileMapSizeBuffer[1] };
+
+        // 크기 계산
+        m_vOffsetScale = Vec2{ (endTile_col - startTile_col + 1),(endTile_row - startTile_row + 1) };
+        m_vOffsetScale *= vRelativeTileSize;
+
+        // 위치 계산을 좌상단 기준으로 한다
+        m_vOffsetPos = Vec2{ -m_pTargetTileMap->Transform()->GetRelativeScale().x / 2, m_pTargetTileMap->Transform()->GetRelativeScale().y / 2 };
+        m_vOffsetPos += Vec2{ m_vOffsetScale.x / 2, -m_vOffsetScale.y / 2 };
+        m_vOffsetPos.x += startTile_col * vRelativeTileSize.x;
+        m_vOffsetPos.y -= startTile_row * vRelativeTileSize.y;
+        //m_vOffsetPos.x += (startTile_col + (endTile_col - startTile_col / 2)) * vRelativeTileSize.x;
+        //m_vOffsetPos.y += (startTile_row + (endTile_row - startTile_row / 2)) * vRelativeTileSize.y;
+    }
+
+
     // 마우스 동작
     if (is_hovered)
     {
@@ -249,36 +298,34 @@ void TileMapEditor::render_update()
             ImVec2 hover_p1 = ImVec2(hover_p0.x + zoomed_tilesize.x, hover_p0.y + zoomed_tilesize.y);
             draw_list->AddRectFilled(hover_p0, hover_p1, IM_COL32(120, 120, 120, 120));
 
-            // 에디터에서 선택된 타일 가져오기
-            int iSelectedIdx = m_pLSEditor->GetCurTileIdx();
-
-            // 좌클릭 => 타일 그리기
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) ||
-                ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            // LandScape Editor의 타입에 따라 클릭시 동작이 달라진다.
+            LS_EDIT_TYPE EditType = m_pLSEditor->GetType();
+            switch (EditType)
             {
-                m_vecCopyTileMap[iTileIndex].iImgIdx = iSelectedIdx;
-
-                if (iSelectedIdx != -1)
+            case LS_EDIT_TYPE::TILE_MAP:
+                DrawTile(iTileIndex);
+                break;
+            case LS_EDIT_TYPE::COLLIDER:
+            {
+                DrawCollider();
+                // 네모 그리기
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                 {
-
-                    int iSelected_col = m_pLSEditor->GetCurTileIdx() % (int)m_pTargetTileMap->GetAtlasTileCount().x;
-                    int iSelected_row = m_pLSEditor->GetCurTileIdx() / (int)m_pTargetTileMap->GetAtlasTileCount().x;
-
-                    Vec2 vLTUV = Vec2(iSelected_col * m_pTargetTileMap->GetTileSliceUV().x, iSelected_row * m_pTargetTileMap->GetTileSliceUV().y);
-
-                    m_vecCopyTileMap[iTileIndex].vLTUV = vLTUV;
+                    rect[0] = iTileIndex;
+                }
+                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+                {
+                    rect[1] = iTileIndex;
                 }
             }
-
-
-            // 우클릭 => 타일 지우기, 
-            else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) ||
-                ImGui::IsMouseDragging(ImGuiMouseButton_Right))
-            {
-                m_vecCopyTileMap[iTileIndex].iImgIdx = -1;
+                break;
+            case LS_EDIT_TYPE::PREFAB:
+                break;
+            default:
+                break;
             }
-
         }
+
 
         // 중앙 클릭 => 이미지 이동
         if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
@@ -299,17 +346,106 @@ void TileMapEditor::render_update()
     }
     draw_list->PopClipRect();
 
-    // Apply, Revert 버튼
-    if (ImGui::Button("Apply"))
+    if (LS_EDIT_TYPE::TILE_MAP == m_pLSEditor->GetType())
     {
-        Apply();
+        // Apply, Revert 버튼
+        if (ImGui::Button("Apply"))
+        {
+            Apply();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Revert"))
+        {
+            Revert();
+        }
+    }
+    else if (LS_EDIT_TYPE::COLLIDER == m_pLSEditor->GetType())
+    {
+        // Apply, Revert 버튼
+        if (ImGui::Button("ADD"))
+        {
+            Add();
+        }
     }
 
-    ImGui::SameLine();
 
-    if (ImGui::Button("Revert"))
+}
+void TileMapEditor::DrawTile(int iTileIndex)
+{
+    // 에디터에서 선택된 타일 가져오기
+    int iSelectedIdx = m_pLSEditor->GetCurTileIdx();
+
+    // 좌클릭 => 타일 그리기
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) ||
+        ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
-        Revert();
+        m_vecCopyTileMap[iTileIndex].iImgIdx = iSelectedIdx;
+
+        if (iSelectedIdx != -1)
+        {
+
+            int iSelected_col = m_pLSEditor->GetCurTileIdx() % (int)m_pTargetTileMap->GetAtlasTileCount().x;
+            int iSelected_row = m_pLSEditor->GetCurTileIdx() / (int)m_pTargetTileMap->GetAtlasTileCount().x;
+
+            Vec2 vLTUV = Vec2(iSelected_col * m_pTargetTileMap->GetTileSliceUV().x, iSelected_row * m_pTargetTileMap->GetTileSliceUV().y);
+
+            m_vecCopyTileMap[iTileIndex].vLTUV = vLTUV;
+        }
     }
 
+
+    // 우클릭 => 타일 지우기, 
+    else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) ||
+        ImGui::IsMouseDragging(ImGuiMouseButton_Right))
+    {
+        m_vecCopyTileMap[iTileIndex].iImgIdx = -1;
+    }
+
+}
+
+void TileMapEditor::DrawCollider()
+{
+    for (size_t i = 0; i < m_vecChildCol.size(); i++)
+    {
+        // offset pos와 size 가져오기
+    }
+}
+
+void TileMapEditor::Add()
+{
+    wstring name = L"col";
+    int sameName = 0;
+    vector<CGameObject*> childs = m_pTargetGameObject->GetChild();
+    for (size_t i = 0; i < childs.size(); ++i)
+    {
+        if (name == childs[i]->GetName().substr(0, 3))
+        {
+            ++sameName;
+        }
+    }
+
+    name += L"_" + std::to_wstring(sameName);
+    
+    CGameObject* pObj = new CGameObject;
+    pObj->SetName(name);
+    pObj->AddComponent(new CTransform);
+    pObj->AddComponent(new CCollider2D);
+    pObj->AddComponent(new CCollider2DScript);
+
+    pObj->Collider2D()->SetOffsetPos(m_vOffsetPos);
+    pObj->Collider2D()->SetOffsetScale(m_vOffsetScale);
+
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    pCurScene->AddObject(pObj, m_pTargetGameObject->GetLayerIndex());
+    m_pTargetGameObject->AddChild(pObj);
+
+    // SceneOutliner 갱신
+    SceneOutliner* pUI = (SceneOutliner*)CImGuiMgr::GetInst()->FindUI("SceneOutliner");
+    pUI->Reset();
+}
+
+void TileMapEditor::AddPrefab(int iTileIndex)
+{
 }

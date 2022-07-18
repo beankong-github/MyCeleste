@@ -21,8 +21,6 @@
 
 #include <Script/CPlayerScript.h>
 #include <Script/CCameraMoveScript.h>
-#include <Script/CMissileScript.h>
-
 void CTestScene::CreateTestScene()
 {
 

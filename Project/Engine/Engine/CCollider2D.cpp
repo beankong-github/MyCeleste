@@ -20,7 +20,7 @@ CCollider2D::CCollider2D()
 	SetCollider2DType(m_eColliderType);	
 
 	// Collider2D 전용 재질 참조	
-	m_pMtrl = CResMgr::GetInst()->FindRes<CMaterial>(L"Collider2DMtrl");
+	m_pMtrl = CResMgr::GetInst()->FindRes<CMaterial>(L"material\\Collider2DMtrl.mtrl");
 }
 
 CCollider2D::CCollider2D(const CCollider2D& _Origin)
@@ -34,7 +34,7 @@ CCollider2D::CCollider2D(const CCollider2D& _Origin)
 	SetCollider2DType(m_eColliderType);
 
 	// Collider2D 전용 재질 참조	
-	m_pMtrl = CResMgr::GetInst()->FindRes<CMaterial>(L"Collider2DMtrl");
+	m_pMtrl = CResMgr::GetInst()->FindRes<CMaterial>(L"material\\Collider2DMtrl.mtrl");
 }
 
 CCollider2D::~CCollider2D()
@@ -91,7 +91,9 @@ void CCollider2D::finalupdate()
 
 void CCollider2D::UpdateData()
 {
-	g_transform.matWorld = m_matColWorld;
+	Matrix Mat = GetOwner()->Transform()->GetWorldMat();
+
+	g_transform.matWorld = m_matColWorld; //* Mat;
 	g_transform.matWV = g_transform.matWorld * g_transform.matView;
 	g_transform.matWVP = g_transform.matWV * g_transform.matProj;
 
@@ -103,6 +105,9 @@ void CCollider2D::UpdateData()
 void CCollider2D::render()
 {
 	UpdateData();
+
+	Matrix a = Transform()->GetWorldMat();
+
 	if (m_pMtrl != nullptr)
 	{
 		m_pMtrl->SetScalarParam(SCALAR_PARAM::INT_0, &m_iCollisionCount);

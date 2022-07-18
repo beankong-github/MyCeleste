@@ -176,6 +176,20 @@ void CAnimator2D::Play(const wstring& _strName)
 	m_playAnimKey = _strName;
 }
 
+void CAnimator2D::PlayDefaultAnim()
+{
+	// 기본 애니메이션이 없으면 assert
+	assert(m_pDefaultAnim == nullptr);
+
+	//기존에 재생중이었던 애니메이션 리셋
+	if (nullptr != m_pCurAnim)
+		m_pCurAnim->Reset();
+
+	//애니메이션 교체
+	m_pCurAnim = m_pDefaultAnim;
+	m_playAnimKey = m_pDefaultAnim->GetName();
+}
+
 void CAnimator2D::SaveToScene(FILE* _pFile)
 {
 	CComponent::SaveToScene(_pFile);

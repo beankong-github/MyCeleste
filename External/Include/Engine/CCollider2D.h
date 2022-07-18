@@ -46,6 +46,9 @@ public:
     Vec2 GetOffsetPos() { return m_vOffsetPos; }
     Vec2 GetOffsetScale() { return m_vOffsetScale; }
 
+    Ptr<CMesh> GetCollider2DMesh() { return m_pMesh; }
+    Ptr<CMaterial> GetCollider2DMaterial() { return m_pMtrl; }
+
 public:
     virtual void finalupdate() override;
     virtual void UpdateData() override;

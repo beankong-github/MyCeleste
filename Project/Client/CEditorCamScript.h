@@ -12,6 +12,9 @@ private:
 public:
     virtual void update() override;
 
+    virtual void SaveToScene(FILE* _pFile) override;
+    virtual void LoadFromScene(FILE* _pFile)override;
+
 public:
     CEditorCamScript();
     ~CEditorCamScript();

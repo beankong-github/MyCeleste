@@ -13,6 +13,10 @@ public:
 
 public:
     virtual void update() override;
+    
+    virtual void SaveToScene(FILE* _pFile);
+    virtual void LoadFromScene(FILE* _pFile);
+
     CLONE(CCameraMoveScript)
 public:
     CCameraMoveScript();

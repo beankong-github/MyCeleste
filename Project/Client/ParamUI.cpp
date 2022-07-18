@@ -71,6 +71,29 @@ Vec4 ParamUI::Param_Vec4(const string& _strName, const Vec4* _pInOut)
 	return data;
 }
 
+UINT ParamUI::Param_ENUM(const string& _strName, const UINT* _pInOut, const vector<wstring>& _enumNames)
+{
+	ImGui::Text(_strName.c_str());
+	ImGui::SameLine(100);
+
+	UINT idx = *_pInOut;
+	string curType = ToString(_enumNames[idx]);
+	if (ImGui::BeginCombo("##ParamENUM", curType.c_str()))
+	{
+		for (UINT i = 0; i < _enumNames.size(); i++)
+		{
+			string type = ToString(_enumNames[i]);
+			if (ImGui::Selectable(type.c_str()))
+			{
+				idx = i;
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	return idx;
+}
+
 
 bool ParamUI::Param_Tex(const string& _strName, CTexture* _pCurTex, UI* _pInst, DBCLKED _pFunc)
 {

@@ -49,6 +49,7 @@ private:
 public:
     CGameObject* GetParent() { return m_pParent; }
     const vector<CGameObject*>& GetChild() { return m_vecChild; }
+    CGameObject* FindChild(wstring _name);
 
     // Deregister ==> 등록 취소(등록->미등록)
     // Unregister ==> 등록 안됨(등록 x == 등록->미등록, 애초에 등록된적 없음)
@@ -79,15 +80,15 @@ public:
     GET_COMPONENT(ParticleSystem, PARTICLESYSTEM)
     GET_COMPONENT(Light2D, LIGHT2D)
 
-
+    
     const vector<CScript*>& GetScripts() { return m_vecScript; }
     CScript* GetScript(UINT _iIdx);
     CScript* GetScriptByName(const wstring& _strName);
+    template<typename T>
+    T* GetScript();
 
     int GetLayerIndex() { return m_iLayerIdx; }
 
-    template<typename T>
-    T* GetScript();
 
 public: 
     virtual void SaveToScene(FILE* _pFile) override;

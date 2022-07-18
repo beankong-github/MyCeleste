@@ -1,6 +1,6 @@
 #pragma once
 #include "UI.h"
-
+#include <Script\CScriptMgr.h>
 
 class MenuUI :
     public UI
@@ -22,8 +22,9 @@ public:
 
 private:
     void Task();
-    void AddComponent(CGameObject* _pTarge, COMPONENT_TYPE _type);
-
+    void AddComponent(CGameObject* _pTarget, COMPONENT_TYPE _type);
+    void AddScript(CGameObject* pTarget, SCRIPT_TYPE _type);
+    
 public:
     MenuUI();
     ~MenuUI();

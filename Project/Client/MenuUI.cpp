@@ -6,7 +6,7 @@
                 
 #include <Engine\CSceneMgr.h>
 #include <Engine\CScene.h>
-#include <Script\CScriptMgr.h>
+//#include <Script\CScriptMgr.h>
 
 #include <Engine\CGameObject.h>
 #include <Engine\CTransform.h>
@@ -17,6 +17,10 @@
 #include <Engine\CLight2D.h>
 #include <Engine\CParticleSystem.h>
 #include <Engine\CMeshRender.h>
+
+#include <Script\CCameraMoveScript.h>
+#include <Script\CPlayerScript.h>
+#include <Script\CCollider2DScript.h>
 
 #include <Script\CSceneSaveLoad.h>
 #include "CImGuiMgr.h"
@@ -164,7 +168,10 @@ void MenuUI::render_update()
             for (size_t i = 0; i < vecScriptName.size(); ++i)
             {
                 string strScriptName = string(vecScriptName[i].begin(), vecScriptName[i].end());
-                ImGui::MenuItem(strScriptName.c_str(), NULL, false, available);
+                if (ImGui::MenuItem(strScriptName.c_str(), NULL, false, available))
+                {
+                    AddScript(pTarget,(SCRIPT_TYPE)i);
+                }
             }
             ImGui::EndMenu();
         }        
@@ -361,5 +368,34 @@ void MenuUI::AddComponent(CGameObject* _pTarget, COMPONENT_TYPE _type)
     {
         pInspector->SetTargetObject(_pTarget);
     }
+}
+
+void MenuUI::AddScript(CGameObject* pTarget, SCRIPT_TYPE _type)
+{
+  assert(pTarget);
+
+  CScript* pScr = pTarget->GetScript((UINT)_type);
+  if (nullptr != pScr)
+      return;
+
+  switch (_type)
+  {
+  case SCRIPT_TYPE::CAMERAMOVESCRIPT:
+      pTarget->AddComponent(new CCameraMoveScript);
+      break;
+  case SCRIPT_TYPE::PLAYERSCRIPT:
+      pTarget->AddComponent(new CPlayerScript);
+      break;
+  case SCRIPT_TYPE::COLLIDER2DSCRIPT:
+      pTarget->AddComponent(new CCollider2DScript);
+      break;
+  }
+
+
+  InspectorUI* pInspector = (InspectorUI*)CImGuiMgr::GetInst()->FindUI("Inspector");
+  if (nullptr != pInspector)
+  {
+      pInspector->SetTargetObject(pTarget);
+  }
 }
 

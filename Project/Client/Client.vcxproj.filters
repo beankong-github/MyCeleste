@@ -98,9 +98,6 @@
     <ClCompile Include="Light2DUI.cpp">
       <Filter>ImGui\UI\01. InspectorUI\ComponentUI\07. Light2D</Filter>
     </ClCompile>
-    <ClCompile Include="Create2DAnimationUI.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="CToolObjMgr.cpp">
       <Filter>Manager</Filter>
     </ClCompile>
@@ -115,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="PrefabUI.cpp">
       <Filter>ImGui\UI\01. InspectorUI\ResInfoUI\01. PrefabUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Create2DAnimationUI.cpp">
+      <Filter>ImGui\UI\05. ToolUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -229,9 +229,6 @@
     <ClInclude Include="Light2DUI.h">
       <Filter>ImGui\UI\01. InspectorUI\ComponentUI\07. Light2D</Filter>
     </ClInclude>
-    <ClInclude Include="Create2DAnimationUI.h">
-      <Filter>ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="CToolObjMgr.h">
       <Filter>Manager</Filter>
     </ClInclude>
@@ -246,6 +243,9 @@
     </ClInclude>
     <ClInclude Include="PrefabUI.h">
       <Filter>ImGui\UI\01. InspectorUI\ResInfoUI\01. PrefabUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Create2DAnimationUI.h">
+      <Filter>ImGui\UI\05. ToolUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -20,6 +20,9 @@ private:
 	UINT					m_arrCheck[MAX_LAYER];
 	map<long long, bool>	m_mapColInfo;	// 충돌 조합 고유 키
 
+public:
+	const UINT* GetCollisionArr() { return m_arrCheck; }
+	void SetCollisionArr(int _idx, int _data) { m_arrCheck[_idx] = _data; }
 
 public:
 	void update();

@@ -17,17 +17,18 @@ CScene::CScene()
 		m_arrLayer[i] = new CLayer;
 		m_arrLayer[i]->m_iLayerIdx = i;
 	}
-
-
-	SetLayerName(0, L"Background");
-	SetLayerName(1, L"Default");
-	SetLayerName(2, L"TileMap_Back");
-	SetLayerName(3, L"TileMap_Front");
-	SetLayerName(4, L"Object_Back");
-	SetLayerName(5, L"Player");
-	SetLayerName(6, L"Object_Front");
-	SetLayerName(7, L"Effect");
-	SetLayerName(8, L"Camera");
+	
+	//SetLayerName(0, L"Background");
+	//SetLayerName(1, L"Default");
+	//SetLayerName(2, L"TileMap_Back");
+	//SetLayerName(3, L"TileMap_Front");
+	//SetLayerName(4, L"Decal");
+	//SetLayerName(5, L"Enemy");
+	//SetLayerName(6, L"Player");
+	//SetLayerName(7, L"Object_Front");
+	//SetLayerName(8, L"Trigger");
+	//SetLayerName(9, L"Effect");
+	//SetLayerName(10, L"Camera");
 }
 
 CScene::~CScene()

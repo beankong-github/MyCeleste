@@ -113,3 +113,14 @@ void CCameraMoveScript::update()
 
 	Transform()->SetRelativePos(vPos);
 }
+
+void CCameraMoveScript::SaveToScene(FILE* _pFile)
+{
+	//CEntity::SaveToScene(_pFile);
+	fwrite(&m_fCamSpeed, sizeof(float), 1, _pFile);
+}
+
+void CCameraMoveScript::LoadFromScene(FILE* _pFile)
+{
+	fread(&m_fCamSpeed, sizeof(float), 1, _pFile);
+}

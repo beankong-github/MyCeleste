@@ -6,6 +6,7 @@
 #include <Engine/CScene.h>
 #include <Engine/CLayer.h>
 #include <Engine/CGameObject.h>
+#include <Engine/CCollisionMgr.h>
 
 #include <Engine/CScript.h>
 #include "CScriptMgr.h"
@@ -54,6 +55,14 @@ void CSceneSaveLoad::SaveScene(CScene* _pScene, const wstring& _strSceneFilePath
             SaveGameObject(vecRootObj[j], pFile);
         }
     }
+    
+    // 3. Collision Check 상태저장
+    const UINT* iCollisionCheckArr = CCollisionMgr::GetInst()->GetCollisionArr();
+    for (UINT i = 0; i < MAX_LAYER; ++i)
+    {
+        fwrite(&iCollisionCheckArr[i], sizeof(UINT), 1, pFile);
+    }
+
     
     // ==================
     //     Close File
@@ -145,6 +154,13 @@ CScene* CSceneSaveLoad::LoadScene(const wstring& _strSceneFilePath)
             CGameObject* pLoadObj = LoadGameObject(pFile);
             pLoadScene->AddObject(pLoadObj, i);
         }
+    }
+    // 3. Collision Check 상태저장
+    for (UINT i = 0; i < MAX_LAYER; ++i)
+    {
+        UINT data;
+        fread(&data, sizeof(UINT), 1, pFile);
+        CCollisionMgr::GetInst()->SetCollisionArr(i, data);
     }
 
     // ==================
