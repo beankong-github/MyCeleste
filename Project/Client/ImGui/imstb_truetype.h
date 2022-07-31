@@ -548,7 +548,7 @@ STBTT_DEF int stbtt_BakeFontBitmap(const unsigned char *data, int offset,  // fo
 typedef struct
 {
    float x0,y0,s0,t0; // top-left
-   float x1,y1,s1,t1; // bottom-right
+   float x1,y1,s1,t1; // bottom-_right
 } stbtt_aligned_quad;
 
 STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph,  // same data as above
@@ -881,7 +881,7 @@ STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, fl
 // specified character/glyph at the specified scale into it, with
 // antialiasing. 0 is no coverage (transparent), 255 is fully covered (opaque).
 // *width & *height are filled out with the width & height of the bitmap,
-// which is stored left-to-right, top-to-bottom.
+// which is stored left-to-_right, top-to-bottom.
 //
 // xoff/yoff are the offset it pixel space from the glyph origin to the top-left of the bitmap
 
@@ -1003,7 +1003,7 @@ STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, floa
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// Finding the right font...
+// Finding the _right font...
 //
 // You should really just solve this offline, keep your own tables
 // of what font is what, and don't try to get it out of the .ttf file.
@@ -1567,7 +1567,7 @@ STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codep
       stbtt_uint32 ngroups = ttULONG(data+index_map+12);
       stbtt_int32 low,high;
       low = 0; high = (stbtt_int32)ngroups;
-      // Binary search the right group.
+      // Binary search the _right group.
       while (low < high) {
          stbtt_int32 mid = low + ((high-low) >> 1); // rounds down, so low <= mid < high
          stbtt_uint32 start_char = ttULONG(data+index_map+16+mid*12);
@@ -3141,7 +3141,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                height = (sy1 - sy0) * e->direction;
                STBTT_assert(x >= 0 && x < len);
                scanline[x]      += stbtt__position_trapezoid_area(height, x_top, x+1.0f, x_bottom, x+1.0f);
-               scanline_fill[x] += height; // everything right of this pixel is filled
+               scanline_fill[x] += height; // everything _right of this pixel is filled
             } else {
                int x,x1,x2;
                float y_crossing, y_final, step, sign, area;
@@ -3185,7 +3185,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                //
                // goal is to measure the area covered by '.' in each pixel
 
-               // if x2 is right at the right edge of x1, y_crossing can blow up, github #1057
+               // if x2 is _right at the _right edge of x1, y_crossing can blow up, github #1057
                // @TODO: maybe test against sy1 rather than y_bottom?
                if (y_crossing > y_bottom)
                   y_crossing = y_bottom;
@@ -3229,7 +3229,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                STBTT_assert(sy1 > y_final-0.01f);
 
                // area covered in the last pixel is the rectangle from all the pixels to the left,
-               // plus the trapezoid filled by the line segment in this pixel all the way to the right edge
+               // plus the trapezoid filled by the line segment in this pixel all the way to the _right edge
                scanline[x2] += area + sign * stbtt__position_trapezoid_area(sy1-y_final, (float) x2, x2+1.0f, x_bottom, x2+1.0f);
 
                // the rest of the line is filled based on the total height of the line segment in this pixel
@@ -3248,10 +3248,10 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                // cases:
                //
                // there can be up to two intersections with the pixel. any intersection
-               // with left or right edges can be handled by splitting into two (or three)
+               // with left or _right edges can be handled by splitting into two (or three)
                // regions. intersections with top & bottom do not necessitate case-wise logic.
                //
-               // the old way of doing this found the intersections with the left & right edges,
+               // the old way of doing this found the intersections with the left & _right edges,
                // then used some simple logic to produce up to three segments in sorted order
                // from top-to-bottom. however, this had a problem: if an x edge was epsilon
                // across the x border, then the corresponding y position might not be distinct
@@ -3271,7 +3271,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                float y1 = (x - x0) / dx + y_top;
                float y2 = (x+1 - x0) / dx + y_top;
 
-               if (x0 < x1 && x3 > x2) {         // three segments descending down-right
+               if (x0 < x1 && x3 > x2) {         // three segments descending down-_right
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
                   stbtt__handle_clipped_edge(scanline,x,e, x1,y1, x2,y2);
                   stbtt__handle_clipped_edge(scanline,x,e, x2,y2, x3,y3);
@@ -3279,13 +3279,13 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x2,y2);
                   stbtt__handle_clipped_edge(scanline,x,e, x2,y2, x1,y1);
                   stbtt__handle_clipped_edge(scanline,x,e, x1,y1, x3,y3);
-               } else if (x0 < x1 && x3 > x1) {  // two segments across x, down-right
+               } else if (x0 < x1 && x3 > x1) {  // two segments across x, down-_right
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
                   stbtt__handle_clipped_edge(scanline,x,e, x1,y1, x3,y3);
                } else if (x3 < x1 && x0 > x1) {  // two segments across x, down-left
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
                   stbtt__handle_clipped_edge(scanline,x,e, x1,y1, x3,y3);
-               } else if (x0 < x2 && x3 > x2) {  // two segments across x+1, down-right
+               } else if (x0 < x2 && x3 > x2) {  // two segments across x+1, down-_right
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x2,y2);
                   stbtt__handle_clipped_edge(scanline,x,e, x2,y2, x3,y3);
                } else if (x3 < x2 && x0 > x2) {  // two segments across x+1, down-left

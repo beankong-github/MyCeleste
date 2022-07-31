@@ -118,26 +118,25 @@ void CTestScene::CreateTestScene()
 
 
 	//// Particle Object 
-	////CGameObject* pParticleObj = new CGameObject;
-	////pParticleObj->SetName(L"ParticleObject_01");
+	CGameObject* pParticleObj = new CGameObject;
+	pParticleObj->SetName(L"ParticleObject_01");
 
-	////pParticleObj->AddComponent(new CTransform);
-	////pParticleObj->AddComponent(new CParticleSystem);
-	////pParticleObj->AddComponent(new CCollider2D);
+	pParticleObj->AddComponent(new CTransform);
+	pParticleObj->AddComponent(new CParticleSystem);
 
-	////pParticleObj->Transform()->SetRelativePos(0.f, 0.f, 500.f);
+	pParticleObj->Transform()->SetRelativePos(0.f, 0.f, 500.f);
 
-	////Ptr<CTexture> pParticleTex = CResMgr::GetInst()->Load<CTexture>(L"Particle_01", L"texture\\particle\\AlphaCircle.png");
-	////pParticleObj->ParticleSystem()->GetMaterial()->SetTexParam(TEX_PARAM::TEX_0, pParticleTex);
+	Ptr<CTexture> pParticleTex = CResMgr::GetInst()->Load<CTexture>(L"texture\\particle\\AlphaCircle.png", L"texture\\particle\\AlphaCircle.png");
+	pParticleObj->ParticleSystem()->GetMaterial()->SetTexParam(TEX_PARAM::TEX_0, pParticleTex);
 
-	////pCurScene->AddObject(pParticleObj, L"Default");
+	pCurScene->AddObject(pParticleObj, L"Default");
 
 
-	////pParticleObj = pParticleObj->Clone();
-	////pParticleObj->SetName(L"ParticleObject_02");
-	////pParticleObj->Transform()->SetRelativePos(-500.f, 0.f, 500.f);
-	////
-	////pCurScene->AddObject(pParticleObj, L"Default");
+	//pParticleObj = pParticleObj->Clone();
+	//pParticleObj->SetName(L"ParticleObject_02");
+	//pParticleObj->Transform()->SetRelativePos(-500.f, 0.f, 500.f);
+	//
+	//pCurScene->AddObject(pParticleObj, L"Default");
 
 	//// 플레이어 추가
 	CGameObject* pPlayer = new CGameObject;
@@ -201,8 +200,8 @@ void CTestScene::CreateTestScene()
 
 
 	// 충돌 레이어 설정
-	CCollisionMgr::GetInst()->CollisionCheck(L"Player", L"Monster");	
+	//CCollisionMgr::GetInst()->CollisionCheck(L"Player", L"Monster");	
 
-	pCurScene->start();	
-	pCurScene->SetSceneState(SCENE_STATE::PLAY);
+	//pCurScene->start();	
+	//pCurScene->SetSceneState(SCENE_STATE::PLAY);
 }

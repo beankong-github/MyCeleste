@@ -122,9 +122,10 @@ std::wstring ToWString(const std::string& str)
 {
     const int length = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
     std::wstring wstr{};
-    wstr.resize(length);
-    MultiByteToWideChar(CP_ACP, 0, &str[0], -1, &wstr[0], length);
-    wstr.pop_back();
+    //wstr.resize(length);
+    //MultiByteToWideChar(CP_ACP, 0, &str[0], -1, &wstr[0], length);
+    //wstr.pop_back();
+    wstr = wstring(str.begin(), str.end());
     return wstr;
 }
 

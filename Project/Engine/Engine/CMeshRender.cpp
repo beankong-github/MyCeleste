@@ -13,6 +13,7 @@
 CMeshRender::CMeshRender()
 	: CRenderComponent(COMPONENT_TYPE::MESHRENDER)
 	, m_tTexInfo(nullptr)
+	, m_vColor(1.f, 1.f, 1.f, 1.f)
 {
 }
 
@@ -85,6 +86,7 @@ void CMeshRender::render()
 			pCB->SetData(&tInfo, sizeof(tSprite));
 			pCB->UpdateData();
 			GetMaterial()->SetTexParam(TEX_PARAM::TEX_0, pAltas);
+			GetMaterial()->SetScalarParam(SCALAR_PARAM::VEC4_0, &m_vColor);
 			GetMaterial()->UpdateData();
 			GetMesh()->render();
 		}

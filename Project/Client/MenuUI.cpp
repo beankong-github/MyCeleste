@@ -21,6 +21,11 @@
 #include <Script\CCameraMoveScript.h>
 #include <Script\CPlayerScript.h>
 #include <Script\CCollider2DScript.h>
+#include <Script\CBangScript.h>
+#include <Script\CCamTrigger.h>
+#include <Script\CBadlineScript.h>
+#include <Script\CPhysics.h>
+#include <Script\CTransition.h>
 
 #include <Script\CSceneSaveLoad.h>
 #include "CImGuiMgr.h"
@@ -388,6 +393,21 @@ void MenuUI::AddScript(CGameObject* pTarget, SCRIPT_TYPE _type)
       break;
   case SCRIPT_TYPE::COLLIDER2DSCRIPT:
       pTarget->AddComponent(new CCollider2DScript);
+      break;
+  case SCRIPT_TYPE::BANGSCRIPT:
+      pTarget->AddComponent(new CBangScript);
+      break;
+  case SCRIPT_TYPE::CAMTRIGGER:
+      pTarget->AddComponent(new CCamTrigger);
+      break;
+  case SCRIPT_TYPE::BADLINESCRIPT:
+      pTarget->AddComponent(new CBadlineScript);
+      break;
+  case SCRIPT_TYPE::PHYSICS:
+      pTarget->AddComponent(new CPhysics);
+      break;
+  case SCRIPT_TYPE::TRANSITION:
+      pTarget->AddComponent(new CTransition);
       break;
   }
 

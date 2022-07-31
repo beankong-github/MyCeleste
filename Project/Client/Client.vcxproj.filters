@@ -116,6 +116,9 @@
     <ClCompile Include="Create2DAnimationUI.cpp">
       <Filter>ImGui\UI\05. ToolUI</Filter>
     </ClCompile>
+    <ClCompile Include="ParticelSystemUI.cpp">
+      <Filter>ImGui\UI\01. InspectorUI\ComponentUI\12. ParticleSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -246,6 +249,9 @@
     </ClInclude>
     <ClInclude Include="Create2DAnimationUI.h">
       <Filter>ImGui\UI\05. ToolUI</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticelSystemUI.h">
+      <Filter>ImGui\UI\01. InspectorUI\ComponentUI\12. ParticleSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

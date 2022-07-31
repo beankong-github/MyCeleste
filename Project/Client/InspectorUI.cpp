@@ -18,6 +18,7 @@
 #include "Collider2DUI.h"
 #include "Animator2DUI.h"
 #include "Light2DUI.h"
+#include "ParticelSystemUI.h"
 
 #include "MaterialUI.h"
 #include "TextureUI.h"
@@ -64,6 +65,10 @@ InspectorUI::InspectorUI()
 	pComUI = new Light2DUI;
 	AddChild(pComUI);
 	m_arrComUI[(UINT)COMPONENT_TYPE::LIGHT2D] = pComUI;
+
+	pComUI = new ParticelSystemUI;
+	AddChild(pComUI);
+	m_arrComUI[(UINT)COMPONENT_TYPE::PARTICLESYSTEM] = pComUI;
 
 	// ==============
 	// ResInfoUI »ý¼º

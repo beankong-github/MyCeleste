@@ -846,7 +846,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
             // Add vertexes for each point on the line
             if (use_texture)
             {
-                // If we're using textures we only need to emit the left/right edge vertices
+                // If we're using textures we only need to emit the left/_right edge vertices
                 ImVec4 tex_uvs = _Data->TexUvLines[integer_thickness];
                 /*if (fractional_thickness != 0.0f) // Currently always zero when use_texture==false!
                 {
@@ -1398,7 +1398,7 @@ void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float th
     PathStroke(col, 0, thickness);
 }
 
-// p_min = upper-left, p_max = lower-right
+// p_min = upper-left, p_max = lower-_right
 // Note we don't render 1 pixels sized rectangles properly.
 void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding, ImDrawFlags flags, float thickness)
 {
@@ -1407,7 +1407,7 @@ void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, fl
     if (Flags & ImDrawListFlags_AntiAliasedLines)
         PathRect(p_min + ImVec2(0.50f, 0.50f), p_max - ImVec2(0.50f, 0.50f), rounding, flags);
     else
-        PathRect(p_min + ImVec2(0.50f, 0.50f), p_max - ImVec2(0.49f, 0.49f), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
+        PathRect(p_min + ImVec2(0.50f, 0.50f), p_max - ImVec2(0.49f, 0.49f), rounding, flags); // Better looking lower-_right corner and rounded non-AA shapes.
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
@@ -1427,7 +1427,7 @@ void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 c
     }
 }
 
-// p_min = upper-left, p_max = lower-right
+// p_min = upper-left, p_max = lower-_right
 void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left)
 {
     if (((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0)
@@ -3925,7 +3925,7 @@ ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRe
 
 // Helper for ColorPicker4()
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
-// Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
+// Spent a non reasonable amount of time trying to getting this _right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
 // FIXME: uses ImGui::GetColorU32
 void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, ImU32 col, float grid_step, ImVec2 grid_off, float rounding, ImDrawFlags flags)
 {

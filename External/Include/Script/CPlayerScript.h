@@ -11,7 +11,9 @@ enum class PLAYER_STATE
     WALK,
     RUN,
     JUMP,
+    FALL,
     DASH,
+    DREAM_DASH,
     CLIME,
     DANGLING,
     CUTSCENE,
@@ -19,36 +21,50 @@ enum class PLAYER_STATE
     END
 };
 
+class CPhysics;
+
 class CPlayerScript :
     public CScript
 {
 private:
     PLAYER_STATE    m_eState;
+    PLAYER_STATE    m_ePrevState;
 
     bool    m_bGround;
-    bool    m_bUseDash;
-    bool    m_bClimb;
+    bool    m_bWall;
+    bool    m_bCollision;
 
+    bool    m_bUseJump;
+    bool    m_bUseDash;
+    bool    m_bDash;
+    bool    m_bClimb;
+    bool    m_bClimbMove;
+    bool    m_bFlip;
     float   m_fDanglingSec;     // 벽에 붙어있을 수 있는 시간
 
-    // F = M * A
-    // V += A * DT
     float         m_fSpeed;         // 속력
-    Vec2          m_vVelocity;      // 속도 ( 속력과 방향 )
-    Vec2         m_fMaxSpeed;      // 최대속력
-    Vec2          m_vForce;         // 힘 ( 질량 X 가속도 )
-    Vec2          m_vAccel;         // 가속도
-    Vec2          m_vAccelA;        // 추가 가속도
-    float         m_fMass;          // 질량
+    Vec2         m_vMaxSpeed;      // 최대속력
 
-    float         m_fFricCoeff;     // 마찰계수
-    float         m_fGravity;       // 중력
+    float         m_fDashTime;       // 대쉬 시간
+    Vec2         m_fDashDir;       // 대쉬 시간
+    Vec2          m_fDreamDashDir;   // DreamDash 방향
 
     // collision
     CGameObject* m_pColBot;
     CGameObject* m_pColFront;
     CGameObject* m_pColBody;
     CGameObject* m_pCollisionObj;
+     
+    list<CGameObject*> m_lCurWall;
+    list<CGameObject*> m_lCurGround;
+
+    //Script
+    CPhysics* m_pPhysics;
+
+    // Bang Color
+    Vec4    m_vNormalHairColor;
+    Vec4    m_vDashHairColor;
+
 
 // 기본 가상함수
 public:
@@ -60,13 +76,12 @@ public:
     virtual void LoadFromScene(FILE* _pFile) override;
 
     // 캡슐
-private:
-    float GetMess() { return m_fMass; }
+public:
+    Vec4 GetNormalHairColor() { return m_vNormalHairColor; }
+    Vec4 GetDashHairColor() { return m_vDashHairColor; }
+    PLAYER_STATE GetPlayerState() { return m_eState; }
+    PLAYER_STATE GetPrevPlayerState() { return m_ePrevState; }
 
-    void SetMess(float _f) { m_fMass = _f; }
-    void SetVelocity(Vec2 _v2) { m_vVelocity = _v2; }
-    void SetMaxVelocity(Vec2 _f) { m_fMaxSpeed = _f; }
-    void SetAccelAlpha(Vec2 _vAccel) { m_vAccelA = _vAccel; }
 
  // 1프레임마다 할 일
 private:
@@ -74,16 +89,8 @@ private:
     void KeyCheck();
     void PlayAnim();
 
-    // lateupdate
-    void CalPhysics();
-    void CalGravity();
-    
-    // lateupdate->CalPhysics->Move
-    void Move();
-
-// 물리
-private:
-    void AddForce(Vec2 _f) { m_vForce += _f; }
+public:
+    void Dead();
 
 // 이벤트
 private:    

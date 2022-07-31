@@ -3,33 +3,40 @@
 
 #include <Engine\CAnimator2D.h>
 #include <Engine\CAnimation2D.h>
-
 #include <Engine\CCollider2D.h>
+
 #include "CCollider2DScript.h"
+#include "CPhysics.h"
 
 CPlayerScript::CPlayerScript()
 	: CScript((int)SCRIPT_TYPE::PLAYERSCRIPT)
 	, m_eState(PLAYER_STATE::IDLE)
-	, m_fSpeed(400.f)
-	, m_vVelocity(0.f, 0.f)
-	, m_vForce(0.f, 0.f)
-	, m_vAccel(0.f, 0.f)
-	, m_fMass(1.f)
-	, m_fMaxSpeed(60.f, 200.f)
-	, m_fFricCoeff(230.f)
+	, m_ePrevState(PLAYER_STATE::IDLE)
+	, m_vNormalHairColor(172.f, 50.f, 50.f, 256.f)
+	, m_vDashHairColor(68.f, 183.f, 255.f, 256.f)
+	, m_vMaxSpeed(80.f, 160.f)
+	, m_fSpeed(70.0f)
+	, m_fDashTime(0.23f)
+	, m_fDanglingSec(5.f)
 	, m_bClimb(false)
 	, m_bGround(false)
+	, m_bDash(false)
+	, m_bWall(false)
 	, m_bUseDash(false)
-	, m_fDanglingSec(5.f)
-	, m_fGravity(800.f)
-	, m_vAccelA{}
+	, m_bUseJump(false)
+	, m_bCollision(false)
+	, m_bClimbMove(false)
+	, m_bFlip(false)
+	, m_pPhysics(nullptr)
 	, m_pCollisionObj(nullptr)
+	, m_pColBot(nullptr)
+	, m_pColFront(nullptr)
+	, m_pColBody(nullptr)
 {
+	SetName(L"CPlayerScript");
+
 	AddScriptParam("Speed", SCRIPTPARAM_TYPE::FLOAT, &m_fSpeed);
-	AddScriptParam("MaxSpeed", SCRIPTPARAM_TYPE::VEC2, &m_fMaxSpeed);
-	AddScriptParam("Friction Coefficient", SCRIPTPARAM_TYPE::FLOAT, &m_fFricCoeff);
-	AddScriptParam("Mass", SCRIPTPARAM_TYPE::FLOAT, &m_fMass);
-	AddScriptParam("m_fGravity", SCRIPTPARAM_TYPE::FLOAT, &m_fGravity);
+	AddScriptParam("MaxSpeed", SCRIPTPARAM_TYPE::VEC2, &m_vMaxSpeed);
 
 }
 
@@ -40,53 +47,47 @@ CPlayerScript::~CPlayerScript()
 
 void CPlayerScript::start()
 {
-	m_pColBot = GetOwner()->FindChild(L"col_bot");
-	m_pColFront = GetOwner()->FindChild(L"col_front");
-	m_pColBody = GetOwner()->FindChild(L"col_body");
+	// 자식 Collider 찾기 
+	m_pColBot = GetOwner()->FindChild(L"01_col_bot");
+	m_pColFront = GetOwner()->FindChild(L"02_col_front");
+	m_pColBody = GetOwner()->FindChild(L"03_col_body");
 
 	assert(m_pColBot);
 	assert(m_pColFront);
 	assert(m_pColBody);
+
+	// Gravity Script 추가
+	m_pPhysics = (CPhysics*)GetOwner()->GetScript<CPhysics>();
+	assert(m_pPhysics);
+	// 최대 속력 추가
+	m_pPhysics->SetMaxXSpeed(m_vMaxSpeed.x);
+	m_pPhysics->SetMaxYSpeed(m_vMaxSpeed.y);
 }
 
 void CPlayerScript::update()
 {
+	PLAYER_STATE curState = m_eState;
+
+	Vec4 color = m_vNormalHairColor / 256.f;
+
 	KeyCheck();
 	PlayAnim();
 
-	//if (KEY_TAP(KEY::B))
-	//{
-	//	m_bBurn = true;
-	//	Ptr<CMaterial> pMtrl = MeshRender()->GetMaterial();
-	//	Vec4 vColor(1.f, 0.75f, 0.5f, 0.f);
-	//	pMtrl->SetScalarParam(SCALAR_PARAM::VEC4_0, &vColor);
-	//}
-
-	//Burnning();
+	// 이번 프레임에 상태가 바뀌었다면
+	if (curState != m_eState)
+		m_ePrevState = m_eState;
 }
 
 void CPlayerScript::lateupdate()
 {
-	CalPhysics();
-
-	if (!m_bGround)
-		CalGravity();
 }
 
 void CPlayerScript::SaveToScene(FILE* _pFile)
 {
-	fwrite(&m_fSpeed, sizeof(float), 1, _pFile);
-	fwrite(&m_fMaxSpeed, sizeof(float), 1, _pFile);
-	fwrite(&m_fFricCoeff, sizeof(float), 1, _pFile);
-	fwrite(&m_fMass, sizeof(float), 1, _pFile);
 }
 
 void CPlayerScript::LoadFromScene(FILE* _pFile)
 {
-	fread(&m_fSpeed, sizeof(float), 1, _pFile);
-	fread(&m_fMaxSpeed, sizeof(float), 1, _pFile);
-	fread(&m_fFricCoeff, sizeof(float), 1, _pFile);
-	fread(&m_fMass, sizeof(float), 1, _pFile);
 }
 
 void CPlayerScript::KeyCheck()
@@ -98,79 +99,263 @@ void CPlayerScript::KeyCheck()
 
 	Vec3 vRot = Transform()->GetRelativeRotation();
 	vRot.ToDegree();
+
 	// 회전
 	if (KEY_TAP(KEY::LEFT))
 	{
-		// 회전
-		if (vRot.y != 180.f)
+		if (vRot.y != 180.f && !m_bClimb)
 		{
 			m_eState = PLAYER_STATE::FLIP;
+			m_bFlip = true;
 			vRot.y = 180.f;
 		}
-	
 	}
 	if (KEY_TAP(KEY::RIGHT))
 	{
-		if (vRot.y != 0.f)
+		if (vRot.y != 0.f && !m_bClimb)
 		{
 			m_eState = PLAYER_STATE::FLIP;
+			m_bFlip = true;
 			vRot.y = 0.f;
 		}
 	}
 
-	// 이동 ( 걷기 )
-	Vec2 right = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
-	if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
-	{	
-		m_eState = PLAYER_STATE::WALK;
-		//vPos.x -= DT * m_fSpeed
-		AddForce(Vec2(right.x * m_fSpeed, right.y));
-	}
-	if (KEY_AWAY(KEY::LEFT) || KEY_AWAY (KEY::RIGHT))
+	vRot.ToRadian();
+	Transform()->SetRelativeRotation(vRot);
+
+
+	Vec3 pos = Transform()->GetRelativePos();
+	Vec2 front = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
+	Vec2 up = Vec2(Transform()->GetRelativeUpDir().x, Transform()->GetRelativeUpDir().y);
+
+	if (m_eState == PLAYER_STATE::DREAM_DASH)
 	{
-		m_eState = PLAYER_STATE::IDLE;
+		pos.x += m_fDreamDashDir.x * 400.f * DT;
+		pos.y += m_fDreamDashDir.y * 400.f * DT;
+		if (nullptr != m_pPhysics)
+			m_pPhysics->OnCollision();
+
+		if (m_bWall)
+		{
+			// 대쉬 종료
+			m_eState == PLAYER_STATE::IDLE;
+			pos.x -= m_fDreamDashDir.x * 400.f * DT;
+			m_bDash = false;
+			m_fDashTime = -1.f;
+
+			// 플레이어 사망
+			Dead();
+		}
+		if (!m_bGround && m_bCollision)
+		{
+			m_eState == PLAYER_STATE::IDLE;
+			pos.y -= m_fDreamDashDir.y * 400.f * DT;
+			m_bDash = false;
+			m_fDashTime = -1.f;
+
+			// 플레이어 사망
+			Dead();
+		}
+
+		Transform()->SetRelativePos(pos);
+		return;
+	}
+	else
+	{
+		m_bUseDash = false;
+		m_fDashTime = 0.23f;
+		m_fDreamDashDir = Vec2(0.f, 0.f);
 	}
 
-	//if (KEY_PRESSED(KEY::UP))
-	//	vPos.y += DT * m_fSpeed;
+	// 이동 ( 걷기 )
+	if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
+	{
+		if (m_bGround && !m_bDash && !m_bFlip && !m_bClimb)
+			m_eState = PLAYER_STATE::WALK;
 
-	//if (KEY_PRESSED(KEY::DOWN))
-	//	vPos.y -= DT * m_fSpeed;
+		if (!m_bWall)
+			pos.x += front.x * m_fSpeed * DT;
+	}
 
 	// 점프
-	if (KEY_PRESSED(KEY::Z))
+	if (KEY_TAP(KEY::C))
 	{
 		// 일반 점프
-
-		// 벽 점프
+		if (m_bGround)
+		{
+			m_eState = PLAYER_STATE::JUMP;
+			m_bUseJump = true;
+			m_pPhysics->GetVelocity() += Vec2(0.f, 400.f);
+		}
 	}
 
 	// 대쉬
-	if (KEY_PRESSED(KEY::Z))
+	if (KEY_PRESSED(KEY::X))
 	{
+		if (!m_bUseDash && !m_bWall)
+		{
+			if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
+				m_fDashDir += front;
+			if (KEY_PRESSED(KEY::UP))
+				m_fDashDir += up;
+			if (KEY_PRESSED(KEY::DOWN))
+				m_fDashDir += -up;
+
+			m_fDashDir.Normalize();
+
+			m_bUseDash = true;
+			m_bDash = true;
+			m_eState = PLAYER_STATE::DASH;
+		}
+	}
+	if (m_bUseDash)
+	{
+		// 대쉬 지속 시간이 끝났다면
+		if (m_fDashTime < 0)
+		{
+			// Dash 방향 초기화
+			if (m_bDash)
+			{
+				m_eState = PLAYER_STATE::IDLE;
+				// 대쉬 끝
+				m_bDash = false;
+			}
+
+			// 착지하면 대쉬를 재사용할 수 있게 UseDash 초기화
+			if (m_bGround)
+			{
+				m_bUseDash = false;
+				m_fDashTime = 0.23f;
+				m_fDashDir = Vec2(0.f, 0.f);
+			}
+		}
+		else
+		{
+			// 현재 상태가 대쉬일 때
+			if (m_eState == PLAYER_STATE::DASH)
+			{
+				m_fDashTime -= DT;
+				m_bDash = true;
+
+				pos.x += m_fDashDir.x * 130.f * DT;
+				pos.y += m_fDashDir.y * 130.f * DT;
+
+				// 벽에 박으면
+				if (m_bWall)
+				{
+					// 대쉬 종료
+					pos.x -= m_fDashDir.x * 130.f * DT;
+					m_bDash = false;
+					m_fDashTime = -1.f;
+				}
+
+				// 머리 박으면
+				if (!m_bGround && m_bCollision)
+				{
+					pos.y -= m_fDashDir.y * 130.f * DT;
+					m_bDash = false;
+					m_fDashTime = -1.f;
+				}
+			}
+
+		}
+	}
+
+	Transform()->SetRelativePos(pos);
+
+	// Idle
+	if (Vec2(0.f, 0.f) == m_pPhysics->GetVelocity() && m_bGround && !m_bFlip)
+	{
+		m_eState = PLAYER_STATE::IDLE;
 	}
 
 	// 매달리기
 	if (KEY_PRESSED(KEY::Z))
 	{
+		if (m_bWall)
+		{
+			if (!m_bClimb)
+			{
+				m_eState = PLAYER_STATE::CLIME;
+				m_bClimb = true;
+				if (nullptr != m_pPhysics)
+					m_pPhysics->StartClimb();
+			}
+
+			if (m_bClimb)
+			{
+				m_bClimbMove = false;
+
+				if (KEY_PRESSED(KEY::UP))
+				{
+					if (m_bClimb && !m_bCollision)
+					{
+						m_eState = PLAYER_STATE::CLIME;
+						pos.y += m_fSpeed * DT;
+						m_bClimbMove = true;
+					}
+				}
+				if (KEY_PRESSED(KEY::DOWN))
+				{
+					if (m_bClimb && !m_bGround)
+					{
+						m_eState = PLAYER_STATE::CLIME;
+						pos.y -= m_fSpeed * DT;
+						m_bClimbMove = true;
+					}
+				}
+
+			}
+		}
 	}
 
-	//// 회전
-	//Vec3 vRot = Transform()->GetRelativeRotation();
-	//vRot.z += DT * XM_2PI;
-	//Transform()->SetRelativeRotation(vRot)
+	if (KEY_AWAY(KEY::Z))
+	{
+		// 바닥으로 추락
+		if (m_bClimb)
+		{
+			m_eState = PLAYER_STATE::IDLE;
+			m_bClimb = false;
+			if (nullptr != m_pPhysics)
+				m_pPhysics->EndClimb();
+		}
+	}
 
-	vRot.ToRadian();
-	Transform()->SetRelativeRotation(vRot);
+
+	Transform()->SetRelativePos(pos);
+
+		// Jump
+		//if (KEY_TAP(KEY::C))
+		//{
+		//	m_eState = PLAYER_STATE::JUMP;
+		//	m_bUseJump = true;
+		//	m_bClimb = false;
+
+		//	Vec2 jDir;
+		//	// 회전
+		//	if (vRot.y != 180.f)
+		//	{
+		//		vRot.y = 180.f;
+		//		jDir = Vec2(-1.f, 1.f);
+		//	}
+		//	else
+		//	{
+		//		vRot.y = 0.f;
+		//		jDir = Vec2(1.f, 1.f);
+		//	}
+
+
+	// 떨어지기
+	//if (m_vVelocity.y < 0)
+	//	m_eState = PLAYER_STATE::FALL;
+
 }
 
 void CPlayerScript::PlayAnim()
 {
 	CAnimator2D* animator = Animator2D();
-	
+
 	// 현재 재생중인 애니메이션이 반복 애니메이션이 아니고 끝나지 않았다면 다른 애니메이션을 재생하지 않는다.
-	if (!animator->GetCurAnim()->IsRepeat() && !animator->GetCurAnim()->IsFinish())
-		return;
 
 	switch (m_eState)
 	{
@@ -178,11 +363,19 @@ void CPlayerScript::PlayAnim()
 		animator->Play(L"idle");
 		break;
 	case PLAYER_STATE::LOOKUP:
-		break;
+	{
+		m_eState = PLAYER_STATE::IDLE;
+		animator->Play(L"lookUp");
+	}
+	break;
 	case PLAYER_STATE::CROUCH:
 		break;
 	case PLAYER_STATE::FLIP:
-		animator->Play(L"flip");
+		if (m_ePrevState != PLAYER_STATE::FLIP)
+			animator->Play(L"flip");
+		else
+			if (animator->GetCurAnim()->IsFinish())
+				m_bFlip = false;
 		break;
 	case PLAYER_STATE::WALK:
 		animator->Play(L"walk");
@@ -190,12 +383,50 @@ void CPlayerScript::PlayAnim()
 	case PLAYER_STATE::RUN:
 		break;
 	case PLAYER_STATE::JUMP:
-		break;
+	{
+		if (m_ePrevState != PLAYER_STATE::JUMP)
+		{
+			if (m_pPhysics->GetVelocity().y < 300.f)
+				animator->Play(L"jumpSlow");
+			else
+				animator->Play(L"jumpFast");
+		}
+
+		if (animator->GetCurAnim()->IsFinish() && m_bGround)
+		{
+			m_eState = PLAYER_STATE::IDLE;
+		}
+	}
+	break;
+	case PLAYER_STATE::FALL:
+	{
+		if (m_ePrevState != PLAYER_STATE::FALL)
+			animator->Play(L"fallPose");
+		else
+			if (animator->GetCurAnim()->IsFinish())
+				m_eState = PLAYER_STATE::IDLE;
+	}
+	break;
 	case PLAYER_STATE::DASH:
+		if (m_ePrevState != PLAYER_STATE::DASH)
+			animator->Play(L"dash");
 		break;
+	case PLAYER_STATE::DREAM_DASH:
+	{
+		if (m_ePrevState != PLAYER_STATE::DREAM_DASH)
+			animator->Play(L"dreamDash");
+	}
+	break;
 	case PLAYER_STATE::CLIME:
+	{
+		if (m_bClimbMove)
+			animator->Play(L"climb");
+		else
+			animator->Play(L"climb_idle");
 		break;
+	}
 	case PLAYER_STATE::DANGLING:
+		animator->Play(L"dangling");
 		break;
 	case PLAYER_STATE::CUTSCENE:
 		break;
@@ -204,127 +435,87 @@ void CPlayerScript::PlayAnim()
 	}
 }
 
-void CPlayerScript::CalPhysics()
+void CPlayerScript::Dead()
 {
-	// 가속도
-	m_vAccel = (m_vForce / m_fMass) * DT; // 초당 가속도 = 힘의 방향 * 가속도의 크기 * DeltaTime
-	m_vAccel += m_vAccelA * DT;
-	// 속도
-	m_vVelocity += m_vAccel;
-	
-	// 속도 제한 검사
-	if (m_fMaxSpeed.x <= abs(m_vVelocity.x))
-	{
-		float y = m_vVelocity.y;
-		m_vVelocity.Normalize();
-		m_vVelocity.x *= m_fMaxSpeed.x;
-		m_vVelocity.y = y;
-	}
-	if (m_fMaxSpeed.y <= abs(m_vVelocity.y))
-	{
-		float x = m_vVelocity.x;
-		m_vVelocity.Normalize();
-		m_vVelocity.x = x;
-		m_vVelocity.y *= m_fMaxSpeed.y;
-	}
-
-	// 마찰력
-	Vec2 vFric = m_vVelocity;
-	vFric.Normalize();
-	vFric *= -1;
-	vFric = vFric * m_fFricCoeff * DT;
-
-
-	if (vFric.Length() >= m_vVelocity.Length())
-		m_vVelocity = Vec2(0.f, 0.f);
-	else m_vVelocity += vFric;
-
-	// 이동
-	Move();
-
-	m_vForce = Vec2(0.f, 0.f);
-	m_vAccel = Vec2(0.f, 0.f);
-	m_vAccelA = Vec2(0.f, 0.f);
-}
-
-void CPlayerScript::CalGravity()
-{
-	SetAccelAlpha(Vec2( 0.f, -m_fGravity ));
-}
-
-void CPlayerScript::Move()
-{
-	Vec3 vPos = Transform()->GetRelativePos();
-	vPos.x += m_vVelocity.x * DT;
-	vPos.y += m_vVelocity.y * DT;
-	Transform()->SetRelativePos(vPos);
 }
 
 void CPlayerScript::OnChildCollisionEnter(CGameObject* _OtherObject, wstring _childName)
 {
 	CGameObject* pColObj = GetOwner()->FindChild(_childName);
 	CCollider2DScript* pOtherColScript = (CCollider2DScript*)_OtherObject->GetScriptByName(L"CCollider2DScript");
-	
+
 	if (nullptr == pOtherColScript)
 		return;
-	
+
+	// Wall Check	
+	if (COLLIDER2D_PROPERTY::WALL == pOtherColScript->GetColliderProterty() && _childName == L"02_col_front")
+	{
+		m_bWall = true;
+		if (nullptr != m_pPhysics)
+			m_pPhysics->OnWall();
+		m_lCurWall.push_back(_OtherObject);
+	}
+
 	// Ground Check
-	if (COLLIDER2D_PROPERTY::GROUND == pOtherColScript->GetColliderProterty() && _childName == L"col_bot")
+	if (COLLIDER2D_PROPERTY::GROUND == pOtherColScript->GetColliderProterty() && _childName == L"01_col_bot")
 	{
 		m_bGround = true;
-		m_pCollisionObj = _OtherObject;
+		if (nullptr != m_pPhysics)
+			m_pPhysics->OnGround();
+		m_lCurGround.push_back(_OtherObject);
+	}
 
-		CCollider2D* pThisCol = m_pColBot->Collider2D();
-		CCollider2D* pOtherCol = m_pCollisionObj->Collider2D();
+	if (COLLIDER2D_PROPERTY::WALL == pOtherColScript->GetColliderProterty() && _childName == L"01_col_bot")
+	{
+		if (!m_bWall)
+		{
+			m_bGround = true;
+			if (nullptr != m_pPhysics)
+				m_pPhysics->OnCollision();
 
-		// 밀린 만큼 위로 올려주기
-		Vec2 thisColPos = Vec2{ Transform()->GetWorldPos().x + pThisCol->GetOffsetPos().x,
-		Transform()->GetWorldPos().y + pThisCol->GetOffsetPos().y };
-		Vec2 otherColPos = Vec2{ m_pCollisionObj->Transform()->GetWorldPos().x + pOtherCol->GetOffsetPos().x, m_pCollisionObj->Transform()->GetWorldPos().y + pOtherCol->GetOffsetPos().y };
+			m_lCurGround.push_back(_OtherObject);
+		}
+	}
 
-		float fLen = abs(thisColPos.y - otherColPos.y);
+	// etc collision
+	if (_childName == L"03_col_body")
+	{
+		if (COLLIDER2D_PROPERTY::WALL == pOtherColScript->GetColliderProterty() || COLLIDER2D_PROPERTY::GROUND == pOtherColScript->GetColliderProterty())
+			if (!m_bGround)
+			{
+				m_bCollision = true;
+				if (nullptr != m_pPhysics)
+					m_pPhysics->OnCollision();
+			}
+	}
 
-		fLen = (pThisCol->GetOffsetScale().y / 2.f + pOtherCol->GetOffsetScale().y / 2.f) - fLen;
+	// DreamBlock Check
+	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherColScript->GetColliderProterty() && _childName == L"03_col_body")
+	{
+		if (m_bDash && PLAYER_STATE::DREAM_DASH != m_eState)
+		{
+			m_eState = PLAYER_STATE::DREAM_DASH;
+		
+			Vec2 right = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
+			Vec2 up = Vec2(Transform()->GetRelativeUpDir().x, Transform()->GetRelativeUpDir().y);
+			
+			m_fDreamDashDir = Vec2(0.f, 0.f);
 
-		Vec3 Pos = Transform()->GetRelativePos();
-		Pos.y += fLen;
-		Transform()->SetRelativePos(Pos);
+			if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
+				m_fDreamDashDir += right;
+			if (KEY_PRESSED(KEY::UP))
+				m_fDreamDashDir += up;
+			if (KEY_PRESSED(KEY::DOWN))
+				m_fDreamDashDir += -up;
 
-		m_vVelocity = Vec2(0.f, 0.f);
+			m_fDreamDashDir.Normalize();
+		}
 	}
 }
 
 void CPlayerScript::OnChildCollision(CGameObject* _OtherObject, wstring _childName)
 {
-	CGameObject* pCol = GetOwner()->FindChild(_childName);
-	CCollider2DScript* pOtherColScript = (CCollider2DScript*)_OtherObject->GetScriptByName(L"CCollider2DScript");
 
-	if (nullptr == pOtherColScript)
-		return;
-
-	if (COLLIDER2D_PROPERTY::GROUND == pOtherColScript->GetColliderProterty() && _childName == L"col_front")
-	{
-		m_pCollisionObj = _OtherObject;
-
-		CCollider2D* pThisCol = m_pColBot->Collider2D();
-		CCollider2D* pOtherCol = m_pCollisionObj->Collider2D();
-
-		// 밀린 만큼 위로 올려주기
-		Vec2 thisColPos = Vec2{ Transform()->GetWorldPos().x + pThisCol->GetOffsetPos().x,
-		Transform()->GetWorldPos().y + pThisCol->GetOffsetPos().y };
-		Vec2 otherColPos = Vec2{ m_pCollisionObj->Transform()->GetWorldPos().x + pOtherCol->GetOffsetPos().x, m_pCollisionObj->Transform()->GetWorldPos().y + pOtherCol->GetOffsetPos().y };
-
-		float fLen = abs(thisColPos.x - otherColPos.x);
-
-		fLen = (pThisCol->GetOffsetScale().x / 2.f + pOtherCol->GetOffsetScale().x / 2.f) - fLen;
-
-		Vec3 Pos = Transform()->GetRelativePos();
-		Pos.x += fLen;
-		Transform()->SetRelativePos(Pos);
-
-
-		m_vVelocity = Vec2(0.f, m_vVelocity.y);
-	}
 
 }
 
@@ -338,10 +529,45 @@ void CPlayerScript::OnChildCollisionExit(CGameObject* _OtherObject, wstring _chi
 
 
 	// Ground Check
-	if (COLLIDER2D_PROPERTY::GROUND == pOtherCol->GetColliderProterty() && _childName == L"col_bot")
+	if (_childName == L"01_col_bot")
 	{
-		m_bGround = false;
-		m_pCollisionObj = nullptr;
+		m_lCurGround.erase(std::remove(m_lCurGround.begin(), m_lCurGround.end(), _OtherObject), m_lCurGround.end());
+		if (m_lCurGround.empty())
+		{
+			m_bGround = false;
+			if (nullptr != m_pPhysics)
+				m_pPhysics->OnAir();
+		}
+	}
+
+	// Wall Check
+	if (COLLIDER2D_PROPERTY::WALL == pOtherCol->GetColliderProterty() && _childName == L"02_col_front")
+	{
+		m_lCurWall.erase(std::remove(m_lCurWall.begin(), m_lCurWall.end(), _OtherObject), m_lCurWall.end());
+
+		if (m_lCurWall.empty())
+			m_bWall = false;
+	}
+
+	// else
+	if (_childName == L"03_col_body")
+	{
+		if (COLLIDER2D_PROPERTY::WALL == pOtherCol->GetColliderProterty() || COLLIDER2D_PROPERTY::GROUND == pOtherCol->GetColliderProterty())
+			if (m_bCollision)
+			{
+				m_bCollision = false;
+			}
+	}
+
+	// DreamBlock Check
+	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherCol->GetColliderProterty() && _childName == L"03_col_body")
+	{
+		m_eState = PLAYER_STATE::IDLE;
+		m_bDash = false;
+		m_bUseDash = false;
+		m_fDashTime = 0.23f;
+		m_fDreamDashDir = Vec2(0.f, 0.f);
+		m_fDashDir = Vec2(0.f, 0.f);
 	}
 }
 

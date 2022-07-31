@@ -22,6 +22,22 @@
     <ClInclude Include="CCollider2DScript.h">
       <Filter>Script</Filter>
     </ClInclude>
+    <ClInclude Include="CDreamBlock.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CBangScript.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CBadlineScript.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CCamTrigger.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CPhysics.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CTransition.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Script.cpp">
@@ -45,6 +61,22 @@
     <ClCompile Include="CCollider2DScript.cpp">
       <Filter>Script</Filter>
     </ClCompile>
+    <ClCompile Include="CDreamBlock.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CBangScript.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CBadlineScript.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CCamTrigger.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CPhysics.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CTransition.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Default">

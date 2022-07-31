@@ -222,6 +222,12 @@ void CSceneSaveLoad::SavePrefab(CPrefab* _Prefab, const wstring& _strFilePath)
     if (nullptr == pFile)
         return;
 
+    int idx = _Prefab->GetProto()->GetLayerIndex();
+    if (idx == -1)
+        idx = 1;
+
+    fwrite(&idx, sizeof(int), 1, pFile);
+
     SaveGameObject(_Prefab->GetProto(), pFile);
 
     fclose(pFile);
@@ -234,6 +240,10 @@ int CSceneSaveLoad::LoadPrefab(CPrefab* _Prefab, const wstring& _strFilePath)
 
     if (nullptr == pFile)
         return E_FAIL;
+
+    int layer = 1;
+    fread(&layer, sizeof(int), 1, pFile);
+    _Prefab->SetProtoLayer(layer);
 
     // 프리팹에 프로토타입이 없을 경우 로드한 GameObject를 Proto로 설정해준다.
     if (nullptr == _Prefab->GetProto())

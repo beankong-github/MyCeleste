@@ -111,18 +111,22 @@ void GS_ParticleRender(point VTX_OUT _in[1], inout TriangleStream<GS_OUT> _outpu
     _output.RestartStrip();
 }
 
-
 float4 PS_ParticleRender(GS_OUT _in) : SV_Target
 {
     float4 vOutColor = (float4) 0.f;    
     
     if(g_btex_0)
     {
-        vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV) * ParticleBuffer[_in.InstID].vColor;
+        vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV)* ParticleBuffer[_in.InstID].vColor;
     }
     else
     {
         vOutColor = ParticleBuffer[_in.InstID].vColor;
+    }
+    
+    if (vOutColor.a <= 0.f)
+    {
+        discard;
     }
     
     return vOutColor;

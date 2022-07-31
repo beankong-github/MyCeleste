@@ -73,7 +73,7 @@ void PrefabUI::ShowOBJInfo()
 
 			info.eType = EVENT_TYPE::CREATE_OBJ;
 			info.lParam = (DWORD_PTR)pTargetPref->Instantiate();
-			info.wParam = (DWORD_PTR)1;		// 프리팹은 기본적으로 레이어 1
+			info.wParam = (DWORD_PTR)pTargetPref->GetProtoLayer();		// 프리팹은 기본적으로 레이어 1
 
 			CEventMgr::GetInst()->AddEvent(info);
 		}

@@ -16,16 +16,17 @@ CParticleSystem::CParticleSystem()
 	, m_fMaxLifeTime(2.f)
 	, m_fStartSpeed(100.f)
 	, m_fEndSpeed(10.f)
-	, m_vStartColor(Vec4(1.f, 0.2f, 0.7f, 1.f))
-	, m_vEndColor(Vec4(1.f, 1.f, 1.f, 1.f))
+	, m_vStartColor(Vec4(120.f, 130.2f, 10.7f, 256.f))
+	, m_vEndColor(Vec4(256.f, 256.f, 256.f, 256.f))
 	, m_vStartScale(Vec3(10.f, 10.f, 1.f))
 	, m_vEndScale(Vec3(1.f, 1.f, 1.f))
 	, m_fParticleCreateDistance(50.f)
 	, m_fParticleCreateTerm(0.02f)
+	, m_pTex{ nullptr, }
 {
 	SetMesh(CResMgr::GetInst()->FindRes<CMesh>(L"PointMesh"));
-	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"ParticleRenderMtrl"));
-
+	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"material\\ParticleRenderMtrl.mtrl"));
+	
 	m_CS = (CParticleUpdateShader*)CResMgr::GetInst()->FindRes<CComputeShader>(L"ParticleUpdateShader").Get();
 
 	m_ParticleBuffer = new CStructuredBuffer();
@@ -53,15 +54,25 @@ CParticleSystem::CParticleSystem(const CParticleSystem& _origin)
 	, m_fParticleCreateTerm(_origin.m_fParticleCreateTerm)
 {
 	SetMesh(CResMgr::GetInst()->FindRes<CMesh>(L"PointMesh"));
-	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"ParticleRenderMtrl"));
+	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"material\\ParticleRenderMtrl.mtrl"));
 
-	m_CS = (CParticleUpdateShader*)CResMgr::GetInst()->FindRes<CComputeShader>(L"ParticleUpdateShader").Get();
+	m_CS = (CParticleUpdateShader*)CResMgr::GetInst()->FindRes<CComputeShader>(_origin.m_CS.Get()->GetKey()).Get();
 
 	m_ParticleBuffer = new CStructuredBuffer();
 	m_ParticleBuffer->Create(sizeof(tParticle), m_iMaxCount, SB_TYPE::READ_WRITE, false, nullptr);
 
 	m_DataBuffer = new CStructuredBuffer;
 	m_DataBuffer->Create(sizeof(tParticleData), 1, SB_TYPE::READ_WRITE, true, nullptr);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		wstring texKey;
+		if (nullptr != _origin.m_pTex[i].Get())
+		{
+			_origin.m_pTex[i].Get()->GetKey();
+			m_pTex[i] = CResMgr::GetInst()->FindRes<CTexture>(texKey);
+		}
+	}
 }
 
 CParticleSystem::~CParticleSystem()
@@ -98,7 +109,7 @@ void CParticleSystem::finalupdate()
 
 	m_CS->SetParticleMinMaxTime(m_fMinLifeTime, m_fMaxLifeTime);
 	m_CS->SetStartEndSpeed(m_fStartSpeed, m_fEndSpeed);
-	m_CS->SetStartEndColor(m_vStartColor, m_vEndColor);
+	m_CS->SetStartEndColor(m_vStartColor / 256.f, m_vEndColor / 256.f);
 	m_CS->SetStartEndScale(m_vStartScale, m_vEndScale);
 
 	m_CS->SetObjectWorldPos(Transform()->GetWorldPos());
@@ -114,6 +125,15 @@ void CParticleSystem::render()
 
 	//GetMaterial()->SetScalarParam(SCALAR_PARAM::INT_0, &i);
 	GetMaterial()->SetScalarParam(SCALAR_PARAM::INT_1, &m_bPosInherit);
+	// Texture Param РќДо
+	for (int i = 0; i < 4; i++)
+	{
+		if (nullptr != m_pTex[i])
+		{
+			TEX_PARAM param = TEX_PARAM((UINT)TEX_PARAM::TEX_0 + i);
+			GetMaterial()->SetTexParam(param, m_pTex[i]);
+		}
+	}
 	GetMaterial()->UpdateData();
 	GetMesh()->render_particle(m_iMaxCount);
 
@@ -142,11 +162,23 @@ void CParticleSystem::SaveToScene(FILE* _pFile)
 	fwrite(&m_vEndScale, sizeof(Vec3), 1, _pFile);
 	fwrite(&m_fParticleCreateDistance, sizeof(float), 1, _pFile);
 	fwrite(&m_fParticleCreateTerm, sizeof(float), 1, _pFile);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		wstring texKey;
+		if (nullptr != m_pTex[i])
+ 			texKey = m_pTex[i].Get()->GetKey();
+
+		SaveWStringToFile(texKey, _pFile);
+	}
 }
 
 void CParticleSystem::LoadFromScene(FILE* _pFile)
 {
 	CRenderComponent::LoadFromScene(_pFile);
+
+	SetMesh(CResMgr::GetInst()->FindRes<CMesh>(L"PointMesh"));
+	SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"material\\ParticleRenderMtrl.mtrl"));
 
 	wstring strKey;
 	LoadWStringFromFile(strKey, _pFile);
@@ -168,4 +200,12 @@ void CParticleSystem::LoadFromScene(FILE* _pFile)
 	fread(&m_vEndScale, sizeof(Vec3), 1, _pFile);
 	fread(&m_fParticleCreateDistance, sizeof(float), 1, _pFile);
 	fread(&m_fParticleCreateTerm, sizeof(float), 1, _pFile);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		wstring texKey;
+		LoadWStringFromFile(texKey, _pFile);
+		
+		m_pTex[i] = CResMgr::GetInst()->FindRes<CTexture>(texKey);
+	}
 }

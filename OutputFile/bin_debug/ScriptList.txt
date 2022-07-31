@@ -1,3 +1,10 @@
+CBadlineScript
+CBangScript
 CCameraMoveScript
+CCamTrigger
 CCollider2DScript
+CDreamBlock
+CGravity
+CPhysics
 CPlayerScript
+CTransition

@@ -240,7 +240,7 @@ static void ImGui_ImplWin32_AddKeyEvent(ImGuiKey key, bool down, int native_keyc
 
 static void ImGui_ImplWin32_ProcessKeyEventsWorkarounds()
 {
-    // Left & right Shift keys: when both are pressed together, Windows tend to not generate the WM_KEYUP event for the first released one.
+    // Left & _right Shift keys: when both are pressed together, Windows tend to not generate the WM_KEYUP event for the first released one.
     if (ImGui::IsKeyDown(ImGuiKey_LeftShift) && !IsVkDown(VK_LSHIFT))
         ImGui_ImplWin32_AddKeyEvent(ImGuiKey_LeftShift, false, VK_LSHIFT);
     if (ImGui::IsKeyDown(ImGuiKey_RightShift) && !IsVkDown(VK_RSHIFT))
@@ -667,7 +667,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
             if (key != ImGuiKey_None)
                 ImGui_ImplWin32_AddKeyEvent(key, is_key_down, vk, scancode);
 
-            // Submit individual left/right modifier events
+            // Submit individual left/_right modifier events
             if (vk == VK_SHIFT)
             {
                 // Important: Shift keys tend to get stuck when pressed together, missing key-up events are corrected in ImGui_ImplWin32_ProcessKeyEventsWorkarounds()

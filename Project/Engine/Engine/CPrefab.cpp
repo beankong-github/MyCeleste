@@ -2,7 +2,9 @@
 #include "CPrefab.h"
 
 #include "CGameObject.h"
-
+#include "CSceneMgr.h"
+#include "CScene.h"
+#include "CLayer.h"
 
 CPrefab::SaveFunc CPrefab::m_pSaveFunc = nullptr;
 CPrefab::LoadFunc CPrefab::m_pLoadFunc = nullptr;
@@ -10,12 +12,14 @@ CPrefab::LoadFunc CPrefab::m_pLoadFunc = nullptr;
 CPrefab::CPrefab()
     : CRes(RES_TYPE::PREFAB)
     , m_pProtoObj(nullptr)
+    , m_iLayer(1)
 {
 }
 
 CPrefab::CPrefab(CGameObject* _pProtoObj)
     : CRes(RES_TYPE::PREFAB)
     , m_pProtoObj(_pProtoObj)
+    , m_iLayer(_pProtoObj->GetLayerIndex())
 {
 }
 

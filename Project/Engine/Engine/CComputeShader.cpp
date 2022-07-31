@@ -6,9 +6,9 @@
 #include "CPathMgr.h"
 
 #ifdef _DEBUG
-static UINT g_iFlag = D3DCOMPILE_DEBUG;
+static UINT g_iCSFlag = D3DCOMPILE_DEBUG;
 #else
-static UINT g_iFlag = 0;
+static UINT g_iCSFlag = 0;
 #endif
 
 
@@ -83,7 +83,7 @@ int CComputeShader::CreateComputeShader(const wstring& _strRelativePath, const s
 
 	// 컴퓨트 쉐이더(HLSL) 컴파일
 	HRESULT hr = D3DCompileFromFile(wstring(strContentPath + _strRelativePath).c_str(), nullptr
-		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "cs_5_0", g_iFlag, 0
+		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "cs_5_0", g_iCSFlag, 0
 		, m_CSBlob.GetAddressOf(), m_ErrBlob.GetAddressOf());
 
 	if (FAILED(hr))

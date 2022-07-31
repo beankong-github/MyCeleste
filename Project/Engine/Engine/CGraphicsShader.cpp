@@ -5,9 +5,9 @@
 #include "CDevice.h"
 
 #ifdef _DEBUG
-static UINT g_iFlag = D3DCOMPILE_DEBUG;
+static UINT g_iGSFlag = D3DCOMPILE_DEBUG;
 #else
-static UINT g_iFlag = 0;
+static UINT g_iGSFlag = 0;
 #endif
 
 vector<D3D11_INPUT_ELEMENT_DESC> CGraphicsShader::g_vecLayout;
@@ -35,7 +35,7 @@ int CGraphicsShader::CreateVertexShader(const wstring& _strRelativePath, const s
 
 	// 버텍스 쉐이더(HLSL) 컴파일
 	HRESULT hr = D3DCompileFromFile(wstring(strContentPath + _strRelativePath).c_str(), nullptr
-		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strVSFunc.c_str(), "vs_5_0", g_iFlag, 0
+		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strVSFunc.c_str(), "vs_5_0", g_iGSFlag, 0
 		, m_VSBlob.GetAddressOf(), m_ErrBlob.GetAddressOf());
 
 	if (FAILED(hr))
@@ -68,7 +68,7 @@ int CGraphicsShader::CreateGeometryShader(const wstring& _strRelativePath, const
 
 	// 버텍스 쉐이더(HLSL) 컴파일
 	HRESULT hr = D3DCompileFromFile(wstring(strContentPath + _strRelativePath).c_str(), nullptr
-		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "gs_5_0", g_iFlag, 0
+		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "gs_5_0", g_iGSFlag, 0
 		, m_GSBlob.GetAddressOf(), m_ErrBlob.GetAddressOf());
 
 	if (FAILED(hr))
@@ -93,7 +93,7 @@ int CGraphicsShader::CreatePixelShader(const wstring& _strRelativePath, const st
 
 	// 버텍스 쉐이더(HLSL) 컴파일
 	HRESULT hr = D3DCompileFromFile(wstring(strContentPath + _strRelativePath).c_str(), nullptr
-		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "ps_5_0", g_iFlag, 0
+		, D3D_COMPILE_STANDARD_FILE_INCLUDE, _strFunc.c_str(), "ps_5_0", g_iGSFlag, 0
 		, m_PSBlob.GetAddressOf(), m_ErrBlob.GetAddressOf());
 
 	if (FAILED(hr))

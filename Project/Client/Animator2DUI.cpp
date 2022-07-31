@@ -45,7 +45,8 @@ void Animator2DUI::render_update()
 	ImGui::SameLine(100.f, 10.f);
 	CAnimation2D* pDefault = GetTargetObject()->Animator2D()->GetDefaultAnim();
 	string defaultAnim;
-	if (nullptr != pDefault) defaultAnim = ToString(GetTargetObject()->Animator2D()->GetDefaultAnim()->GetName());
+	if (nullptr != pDefault) 
+		defaultAnim = ToString(GetTargetObject()->Animator2D()->GetDefaultAnim()->GetName());
 	else
 		defaultAnim = "NONE";
 	// 애니메이션 결정할 ComboBox
@@ -71,7 +72,8 @@ void Animator2DUI::render_update()
 
 	ImGui::Text("Current Animation");
 	ImGui::SameLine(100.f, 10.f);
-	CAnimation2D* pCur = GetTargetObject()->Animator2D()->GetCurAnim();
+	CAnimation2D* pCur = nullptr;
+	pCur = GetTargetObject()->Animator2D()->GetCurAnim();
 	string curAnim;
 	if (nullptr != pCur)
 		curAnim = ToString(pCur->GetName());

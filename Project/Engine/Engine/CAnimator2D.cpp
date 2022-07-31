@@ -69,8 +69,8 @@ void CAnimator2D::finalupdate()
 	}
 	else if (m_pCurAnim->IsReset() && !m_pCurAnim->IsRepeat())
 	{
-		m_pCurAnim->Reset();
-		m_pCurAnim = m_pDefaultAnim;
+		/*m_pCurAnim->Reset();
+		m_pCurAnim = m_pDefaultAnim;*/
 	}
 }
 
@@ -227,7 +227,6 @@ void CAnimator2D::LoadFromScene(FILE* _pFile)
 		CAnimation2D* pAnim = new CAnimation2D;
 		pAnim->LoadFromScene(_pFile);
 
-		
 		auto iter = m_mapAnim.insert(make_pair(pAnim->GetName(), pAnim));
 		if (false == iter.second)
 		{

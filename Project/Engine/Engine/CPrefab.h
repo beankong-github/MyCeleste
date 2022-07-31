@@ -9,6 +9,11 @@ class CPrefab :
 private:
     CGameObject* m_pProtoObj;
 
+    int m_iLayer;
+
+public:
+    int GetProtoLayer() { return m_iLayer; }
+    void SetProtoLayer(int _iLayer) { m_iLayer = _iLayer; }
 
 // 프리팹 Sava/Load 함수 포인터
 public:

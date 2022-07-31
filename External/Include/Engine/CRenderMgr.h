@@ -1,7 +1,7 @@
 #pragma once
 #include "singleton.h"
+#include "CCamera.h"
 
-class CCamera;
 class CLight2D;
 
 class CRenderMgr :
@@ -27,6 +27,7 @@ private:
     void render_editor();       // Editor Camera 시점으로 Render
 
 public:
+    CGameObject* GetMainCam() { return m_vecCam[0]->GetOwner(); }
     void RegisterCamera(CCamera* _pCam);
     void RegisterEditorCamera(CCamera* _pCam) { m_pEditorCam = _pCam; }
     void ClearCamera() { m_vecCam.clear(); }

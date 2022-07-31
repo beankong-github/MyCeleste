@@ -376,7 +376,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
 
     // Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
 
-    // e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
+    // e.g. Use 2/3 of the space for widgets and 1/3 for labels (_right align)
     //ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.35f);
 
     // e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
@@ -1082,7 +1082,7 @@ static void ShowDemoWindowWidgets()
             ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
             ImVec2 pos = ImGui::GetCursorScreenPos();
             ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
-            ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+            ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-_right
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
             ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
             ImGui::Image(my_tex_id, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
@@ -3088,7 +3088,7 @@ static void ShowDemoWindowLayout()
                     if (enable_track && item == track_item)
                     {
                         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
-                        ImGui::SetScrollHereX(i * 0.25f); // 0.0f:left, 0.5f:center, 1.0f:right
+                        ImGui::SetScrollHereX(i * 0.25f); // 0.0f:left, 0.5f:center, 1.0f:_right
                     }
                     else
                     {
@@ -3506,7 +3506,7 @@ static void ShowDemoWindowPopups()
             }
 
             // We can also use OpenPopupOnItemClick() to toggle the visibility of a given popup.
-            // Here we make it that right-clicking this other text element opens the same popup as above.
+            // Here we make it that _right-clicking this other text element opens the same popup as above.
             // The popup itself will be submitted by the code above.
             ImGui::Text("(2) Or right-click this text");
             ImGui::OpenPopupOnItemClick("my popup", ImGuiPopupFlags_MouseButtonRight);

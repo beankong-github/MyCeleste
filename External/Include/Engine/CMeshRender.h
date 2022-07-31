@@ -11,13 +11,18 @@ private:
     wstring             m_strAtlasKey;
     wstring             m_strSpriteKey;
     tSprite*            m_tTexInfo;
+    
+    Vec4                m_vColor;
 
 public:
     void SetAtlasKey(wstring _key) {  m_strAtlasKey = _key; }
     void SetSpritekey(wstring _key) { m_strSpriteKey = _key; }
-    
+    void SetColor(Vec4 _color) { m_vColor = _color; }
+
     wstring GetAtlasKey() { return m_strAtlasKey; }
     wstring GetSpriteKey() { return m_strSpriteKey; }
+    Vec4 GetColor() { return m_vColor; }
+
 
     tSprite* GetTexInfo() { return m_tTexInfo; }
 

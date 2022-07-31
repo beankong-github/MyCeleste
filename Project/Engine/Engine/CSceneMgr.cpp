@@ -123,7 +123,16 @@ CGameObject* CSceneMgr::FindObjectByName(const wstring& _strName)
 	for (UINT i = 0; i < MAX_LAYER; ++i)
 	{
 		CLayer* pLayer = m_pCurScene->GetLayer(i);
+		const vector<CGameObject*>& vecRootObj = pLayer->GetRootObjects();
 		const vector<CGameObject*>& vecObj = pLayer->GetObjects();
+
+		for (size_t j = 0; j < vecRootObj.size(); ++j)
+		{
+			if (_strName == vecRootObj[j]->GetName())
+			{
+				return vecRootObj[j];
+			}
+		}
 
 		for (size_t j = 0; j < vecObj.size(); ++j)
 		{

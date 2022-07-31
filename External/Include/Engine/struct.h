@@ -63,8 +63,8 @@ struct tParticle
 	Vec4	vColor;
 
 	int		Alive;
-	float   m_fCurTime; // 생존 시간
-	float	m_fMaxTime; // 최대 생명 시간
+	float   fCurTime; // 생존 시간
+	float	fMaxTime; // 최대 생명 시간
 };
 
 struct tParticleData

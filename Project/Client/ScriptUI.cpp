@@ -32,9 +32,12 @@ void ScriptUI::render_update()
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.f, 0.8f, 0.8f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.f, 0.8f, 0.8f));
 
-	wstring wstrScriptName = CScriptMgr::GetScriptName(m_pTargetScript);
-	string strScriptName(wstrScriptName.begin(), wstrScriptName.end());
-	ImGui::Button(strScriptName.c_str());
+	if (nullptr != CScriptMgr::GetScriptName(m_pTargetScript))
+	{
+		wstring wstrScriptName = CScriptMgr::GetScriptName(m_pTargetScript);
+		string strScriptName(wstrScriptName.begin(), wstrScriptName.end());
+		ImGui::Button(strScriptName.c_str());
+	}
 
 	ImGui::PopStyleColor(3);
 	ImGui::PopID();

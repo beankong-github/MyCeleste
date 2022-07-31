@@ -369,6 +369,6 @@ void CDevice::ClearTarget()
 	static CTexture* pRTTex = CResMgr::GetInst()->FindRes<CTexture>(L"RenderTargetTex").Get();
 	static CTexture* pDSTex = CResMgr::GetInst()->FindRes<CTexture>(L"DepthStencilTex").Get();
 
-	m_pDeviceContext->ClearRenderTargetView(pRTTex->GetRTV().Get(), Vec4(0.06f, 0.06f, 0.1f, 1.f));
+	m_pDeviceContext->ClearRenderTargetView(pRTTex->GetRTV().Get(), Vec4(0.002f, 0.003f, 0.02f, 1.f));
 	m_pDeviceContext->ClearDepthStencilView(pDSTex->GetDSV().Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 }

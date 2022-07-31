@@ -390,7 +390,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
 
    best_x = (best == NULL) ? 0 : (*best)->x;
 
-   // if doing best-fit (BF), we also have to try aligning right edge to each node position
+   // if doing best-fit (BF), we also have to try aligning _right edge to each node position
    //
    // e.g, if fitting
    //
@@ -403,7 +403,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
    //   |             ____________|
    //   |____________|
    //
-   // then right-aligned reduces waste, but bottom-left BL is always chooses left-aligned
+   // then _right-aligned reduces waste, but bottom-left BL is always chooses left-aligned
    //
    // This makes BF take about 2x the time
 
@@ -468,7 +468,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
 
    context->free_head = node->next;
 
-   // insert the new node into the right starting point, and
+   // insert the new node into the _right starting point, and
    // let 'cur' point to the remaining nodes needing to be
    // stiched back in
 

@@ -50,6 +50,8 @@ void CEventMgr::update()
 		{
 			CGameObject* pObj = (CGameObject*)m_vecEvent[i].lParam;
 			int iLayerIdx = (int)m_vecEvent[i].wParam;
+			if (iLayerIdx == -1)
+				iLayerIdx = 1;
 			CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
 			pCurScene->AddObject(pObj, iLayerIdx);
 

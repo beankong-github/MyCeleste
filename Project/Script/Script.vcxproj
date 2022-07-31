@@ -179,20 +179,32 @@ call CodeGen.exe</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CBadlineScript.h" />
+    <ClInclude Include="CBangScript.h" />
     <ClInclude Include="CCameraMoveScript.h" />
+    <ClInclude Include="CCamTrigger.h" />
     <ClInclude Include="CCollider2DScript.h" />
+    <ClInclude Include="CDreamBlock.h" />
+    <ClInclude Include="CPhysics.h" />
     <ClInclude Include="CPlayerScript.h" />
     <ClInclude Include="CSceneSaveLoad.h" />
     <ClInclude Include="CScriptMgr.h" />
+    <ClInclude Include="CTransition.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CBadlineScript.cpp" />
+    <ClCompile Include="CBangScript.cpp" />
     <ClCompile Include="CCameraMoveScript.cpp" />
+    <ClCompile Include="CCamTrigger.cpp" />
     <ClCompile Include="CCollider2DScript.cpp" />
+    <ClCompile Include="CDreamBlock.cpp" />
+    <ClCompile Include="CPhysics.cpp" />
     <ClCompile Include="CPlayerScript.cpp" />
     <ClCompile Include="CSceneSaveLoad.cpp" />
     <ClCompile Include="CScriptMgr.cpp" />
+    <ClCompile Include="CTransition.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Script.cpp" />
   </ItemGroup>

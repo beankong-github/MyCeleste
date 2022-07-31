@@ -24,6 +24,7 @@ struct VTX_IN
 
 struct VTX_OUT
 {
+    float3 vWorldPos : POSITION;
     float4 vPosition : SV_Position;
     float2 vUV : TEXCOORD;
 };
@@ -33,6 +34,7 @@ VTX_OUT VS_TileMap(VTX_IN _in)
     VTX_OUT output = (VTX_OUT) 0.f;
     
     output.vPosition = mul(float4(_in.vPos, 1.f), g_matWVP);
+    output.vWorldPos = mul(float4(_in.vPos, 1.f), g_matWorld).xyz;
     output.vUV = _in.vUV;
     
     return output;
@@ -66,6 +68,12 @@ float4 PS_TileMap(VTX_OUT _in) : SV_Target
     float2 vSampleUI = vLeftTopUV + vImgUV * SliceSizeUV;
     
     vOutColor = g_tex_0.Sample(g_sam_1, vSampleUI);
+    
+    // ±¤¿ø¿¡ µû¸¥ ºû °è»ê    
+    float3 vLightColor = CalculateLight2D(_in.vWorldPos);
+    
+    // ºû Àû¿ë
+    vOutColor.rgb *= vLightColor.rgb;
     
     return vOutColor;
 }
