@@ -7,8 +7,9 @@
 #include "CCamTrigger.h"
 #include "CCollider2DScript.h"
 #include "CDreamBlock.h"
+#include "CEndingCut.h"
 #include "CPhysics.h"
-#include "CPhysics.h"
+#include "CPlayerAfterImgScript.h"
 #include "CPlayerScript.h"
 #include "CTransition.h"
 
@@ -20,7 +21,9 @@ void CScriptMgr::GetScriptInfo(vector<wstring>& _vec)
 	_vec.push_back(L"CCamTrigger");
 	_vec.push_back(L"CCollider2DScript");
 	_vec.push_back(L"CDreamBlock");
+	_vec.push_back(L"CEndingCut");
 	_vec.push_back(L"CPhysics");
+	_vec.push_back(L"CPlayerAfterImgScript");
 	_vec.push_back(L"CPlayerScript");
 	_vec.push_back(L"CTransition");
 }
@@ -39,8 +42,12 @@ CScript * CScriptMgr::GetScript(const wstring& _strScriptName)
 		return new CCollider2DScript;
 	if (L"CDreamBlock" == _strScriptName)
 		return new CDreamBlock;
+	if (L"CEndingCut" == _strScriptName)
+		return new CEndingCut;
 	if (L"CPhysics" == _strScriptName)
 		return new CPhysics;
+	if (L"CPlayerAfterImgScript" == _strScriptName)
+		return new CPlayerAfterImgScript;
 	if (L"CPlayerScript" == _strScriptName)
 		return new CPlayerScript;
 	if (L"CTransition" == _strScriptName)
@@ -70,8 +77,14 @@ CScript * CScriptMgr::GetScript(UINT _iScriptType)
 	case (UINT)SCRIPT_TYPE::DREAMBLOCK:
 		return new CDreamBlock;
 		break;
+	case (UINT)SCRIPT_TYPE::ENDINGCUT:
+		return new CEndingCut;
+		break;
 	case (UINT)SCRIPT_TYPE::PHYSICS:
 		return new CPhysics;
+		break;
+	case (UINT)SCRIPT_TYPE::PLAYERAFTERIMGSCRIPT:
+		return new CPlayerAfterImgScript;
 		break;
 	case (UINT)SCRIPT_TYPE::PLAYERSCRIPT:
 		return new CPlayerScript;
@@ -111,8 +124,20 @@ const wchar_t * CScriptMgr::GetScriptName(CScript * _pScript)
 		return L"CDreamBlock";
 		break;
 
+	case SCRIPT_TYPE::ENDINGCUT:
+		return L"CEndingCut";
+		break;
+
+	case SCRIPT_TYPE::GRAVITY:
+		return L"CGravity";
+		break;
+
 	case SCRIPT_TYPE::PHYSICS:
 		return L"CPhysics";
+		break;
+
+	case SCRIPT_TYPE::PLAYERAFTERIMGSCRIPT:
+		return L"CPlayerAfterImgScript";
 		break;
 
 	case SCRIPT_TYPE::PLAYERSCRIPT:

@@ -12,7 +12,7 @@
 #include "CComputeShader.h"
 #include "CSceneFile.h"
 #include "CXMLData.h"
-//#include "CSound.h"
+#include "CSound.h"
 //#include "CMeshData.h"
 
 
@@ -27,9 +27,11 @@ private:
 
 public:
 	void init();
+	void update();
 	void SaveChangedRes();
 
 private:
+	void InitSound();
 	void CreateEngineMesh();
 	void CreateEngineTexture();
 	void CreateEngineShader();
@@ -86,6 +88,8 @@ inline RES_TYPE CResMgr::GetResType()
 		return RES_TYPE::MATERIAL;
 	else if (info.hash_code() == typeid(CTexture).hash_code())
 		return RES_TYPE::TEXTURE;
+	else if (info.hash_code() == typeid(CSound).hash_code())
+		return RES_TYPE::SOUND;
 	else if (info.hash_code() == typeid(CSceneFile).hash_code())
 		return RES_TYPE::SCENEFILE;
 	else if (info.hash_code() == typeid(CXMLData).hash_code())

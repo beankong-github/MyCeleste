@@ -50,60 +50,76 @@ void CBangScript::update()
 
 	Vec3 Pos = Transform()->GetRelativePos();
 
-
 	switch (state)
 	{
 	case PLAYER_STATE::IDLE:
 	{
 		if (3 == pParentAnimator->GetCurAnim()->GetCurFrmIdx())
 		{
+			Pos.x = 0.f;
 			Pos.y = -0.17f;
 		}
 		else if (0 == pParentAnimator->GetCurAnim()->GetCurFrmIdx())
 		{
+			Pos.x = 0.f;
 			Pos.y = -0.15f;
 		}
 	}
 	break;
-	case PLAYER_STATE::RUN:
-		break;
-	case PLAYER_STATE::JUMP:
-		break;
-	case PLAYER_STATE::FALL:
-		break;
+	case PLAYER_STATE::FLIP:
+	{
+		if (0 == pParentAnimator->GetCurAnim()->GetCurFrmIdx())
+		{
+			Pos.x = -0.06f;
+			Pos.y = -0.17f;
+		}
+		else if (3 >= pParentAnimator->GetCurAnim()->GetCurFrmIdx())
+		{
+			Pos.x = 0.0f;
+			Pos.y = -0.17f;
+		}
+		else if (3 == pParentAnimator->GetCurAnim()->GetCurFrmIdx())
+		{
+			Pos.x = 0.04f;
+			Pos.y = -0.17f;
+		}
+		else
+		{
+			Pos.x = 0.08f;
+			Pos.y = -0.2f;
+		}
+	}
+	break;
+	case PLAYER_STATE::WALK:
+	{
+		Pos.x = 0.0f;
+		Pos.y = -0.17f;
+	}
+	break;
 	case PLAYER_STATE::DASH:
+	{
+		Pos.x = 0.0f;	
+		Pos.y = -0.17f;
+	}
 		break;
 	case PLAYER_STATE::DREAM_DASH:
 		GetOwner()->MeshRender()->Deactivate();
 		break;
 	case PLAYER_STATE::CLIME:
 		break;
-	case PLAYER_STATE::DANGLING:
+	case PLAYER_STATE::JUMP:
+	{
+		Pos.x = 0.0f;
+		Pos.y = -0.17f;
+	}
 		break;
 	case PLAYER_STATE::DEAD:
-		break;
-	case PLAYER_STATE::END:
+		GetOwner()->MeshRender()->Deactivate();
 		break;
 	}
 
-	if(L"flip" == pParentAnimator->GetCurAnim()->GetName())
-	{
-		int i = pParentAnimator->GetCurAnim()->GetCurFrmIdx();
-		if (2 < i && 8 > i )
-		{
-			Pos.x = 0.05f;
-			Pos.y = -0.20f;
-			GetOwner()->MeshRender()->SetSpritekey(L"bangs01.png");
-		}
-		else
-		{
-			Pos.x = 0.0f;
-			Pos.y = -0.19f;
-			GetOwner()->MeshRender()->SetSpritekey(L"bangs00.png");
-		}
-	}
-
-	if (L"dreamDash" == pParentAnimator->GetCurAnim()->GetName())
+	wstring animName = pParentAnimator->GetCurAnim()->GetName();
+	if (L"dreamDash" == animName || L"death_h" == animName)
 	{
 		GetOwner()->MeshRender()->Deactivate();
 	}
@@ -117,6 +133,12 @@ void CBangScript::update()
 
 void CBangScript::lateupdate()
 {
+
+	if (m_pPlayerScript->UseDash())
+		m_vColor = m_vUseDashHairColor;
+	else
+		m_vColor = m_vDefaultHairColor;
+
 	if(nullptr != MeshRender())
 		MeshRender()->SetColor(m_vColor / 256.f);
 }

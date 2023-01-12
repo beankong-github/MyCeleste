@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CPlayerScript.h"
+#include <random>
 
 #include <Engine\CAnimator2D.h>
 #include <Engine\CAnimation2D.h>
@@ -7,11 +8,14 @@
 
 #include "CCollider2DScript.h"
 #include "CPhysics.h"
+#include "CTransition.h"
+#include "CCamTrigger.h"
 
 CPlayerScript::CPlayerScript()
 	: CScript((int)SCRIPT_TYPE::PLAYERSCRIPT)
 	, m_eState(PLAYER_STATE::IDLE)
 	, m_ePrevState(PLAYER_STATE::IDLE)
+	, m_eStage(STAGE::S00)
 	, m_vNormalHairColor(172.f, 50.f, 50.f, 256.f)
 	, m_vDashHairColor(68.f, 183.f, 255.f, 256.f)
 	, m_vMaxSpeed(80.f, 160.f)
@@ -27,11 +31,13 @@ CPlayerScript::CPlayerScript()
 	, m_bCollision(false)
 	, m_bClimbMove(false)
 	, m_bFlip(false)
+	, m_bWalk(false)
 	, m_pPhysics(nullptr)
 	, m_pCollisionObj(nullptr)
 	, m_pColBot(nullptr)
 	, m_pColFront(nullptr)
 	, m_pColBody(nullptr)
+	, m_pTransition(nullptr)
 {
 	SetName(L"CPlayerScript");
 
@@ -59,9 +65,22 @@ void CPlayerScript::start()
 	// Gravity Script 추가
 	m_pPhysics = (CPhysics*)GetOwner()->GetScript<CPhysics>();
 	assert(m_pPhysics);
+
 	// 최대 속력 추가
 	m_pPhysics->SetMaxXSpeed(m_vMaxSpeed.x);
 	m_pPhysics->SetMaxYSpeed(m_vMaxSpeed.y);
+
+	// Transition 추가
+	m_pTransition = CSceneMgr::GetInst()->FindObjectByName(L"transition");
+	assert(m_pTransition);
+
+	// bg 사운드 재생
+	Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\bg.mp3", L"sound\\bg.mp3");
+	pSound->Play(0, 0.5f);
+
+	pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\env_amb_02_dream.ogg", L"env_amb_02_dream.ogg");
+	pSound->Play(0, 0.3f);
+
 }
 
 void CPlayerScript::update()
@@ -70,7 +89,9 @@ void CPlayerScript::update()
 
 	Vec4 color = m_vNormalHairColor / 256.f;
 
-	KeyCheck();
+	if(curState != PLAYER_STATE::DEAD)
+		KeyCheck();
+
 	PlayAnim();
 
 	// 이번 프레임에 상태가 바뀌었다면
@@ -119,6 +140,7 @@ void CPlayerScript::KeyCheck()
 			vRot.y = 0.f;
 		}
 	}
+	
 
 	vRot.ToRadian();
 	Transform()->SetRelativeRotation(vRot);
@@ -128,30 +150,40 @@ void CPlayerScript::KeyCheck()
 	Vec2 front = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
 	Vec2 up = Vec2(Transform()->GetRelativeUpDir().x, Transform()->GetRelativeUpDir().y);
 
+
 	if (m_eState == PLAYER_STATE::DREAM_DASH)
 	{
+		// 대쉬
 		pos.x += m_fDreamDashDir.x * 400.f * DT;
 		pos.y += m_fDreamDashDir.y * 400.f * DT;
 		if (nullptr != m_pPhysics)
 			m_pPhysics->OnCollision();
+		
+		// 사운드 재생
+		Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_dreamblock_travel_loop.ogg", L"sound\\player\\char_mad_dreamblock_travel_loop.ogg");
+		pSound->Play(1, 0.5f);
 
 		if (m_bWall)
 		{
 			// 대쉬 종료
-			m_eState == PLAYER_STATE::IDLE;
+			m_eState = PLAYER_STATE::IDLE;
 			pos.x -= m_fDreamDashDir.x * 400.f * DT;
 			m_bDash = false;
 			m_fDashTime = -1.f;
+
+			pSound->Stop();
 
 			// 플레이어 사망
 			Dead();
 		}
 		if (!m_bGround && m_bCollision)
 		{
-			m_eState == PLAYER_STATE::IDLE;
+			m_eState = PLAYER_STATE::IDLE;
 			pos.y -= m_fDreamDashDir.y * 400.f * DT;
 			m_bDash = false;
 			m_fDashTime = -1.f;
+
+			pSound->Stop();
 
 			// 플레이어 사망
 			Dead();
@@ -162,19 +194,48 @@ void CPlayerScript::KeyCheck()
 	}
 	else
 	{
-		m_bUseDash = false;
-		m_fDashTime = 0.23f;
-		m_fDreamDashDir = Vec2(0.f, 0.f);
+		Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_dreamblock_travel_loop.ogg", L"sound\\player\\char_mad_dreamblock_travel_loop.ogg");
+		pSound->Stop();
 	}
 
 	// 이동 ( 걷기 )
+	float term = 0.35f;
+	static float termCounter = 0.f;
 	if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
 	{
 		if (m_bGround && !m_bDash && !m_bFlip && !m_bClimb)
+		{
 			m_eState = PLAYER_STATE::WALK;
+			m_bWalk = true;
 
+			if (termCounter <= 0.f)
+			{
+				// 사운드 재생
+				// 시드값을 얻기 위한 random_device 생성.
+				std::random_device rd;
+				// random_device 를 통해 난수 생성 엔진을 초기화 한다.
+				std::mt19937 gen(rd());
+				// 0 부터 99 까지 균등하게 나타나는 난수열을 생성하기 위해 균등 분포 정의.
+				std::uniform_int_distribution<int> dis(1, 6);
+				int rndNum = dis(gen);
+				wstring skey = L"sound\\brick\\game_gen_debris_stone_soft_0" + to_wstring(rndNum) + L".ogg";
+				Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(skey, skey);
+				pSound->Play(1, 0.5f, true);
+
+				termCounter = term;
+			}
+			else
+			{
+				termCounter -= DT;
+			}
+		}
 		if (!m_bWall)
 			pos.x += front.x * m_fSpeed * DT;
+	}
+	if (KEY_AWAY(KEY::LEFT) || KEY_AWAY(KEY::RIGHT))
+	{
+		m_bWalk = false;
+		termCounter = 0.f;
 	}
 
 	// 점프
@@ -186,6 +247,9 @@ void CPlayerScript::KeyCheck()
 			m_eState = PLAYER_STATE::JUMP;
 			m_bUseJump = true;
 			m_pPhysics->GetVelocity() += Vec2(0.f, 400.f);
+			// 사운드 재생
+			Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_jump.ogg", L"sound\\player\\char_mad_jump.ogg");
+			pSound->Play(1, 0.5f, true);
 		}
 	}
 
@@ -208,6 +272,8 @@ void CPlayerScript::KeyCheck()
 			m_eState = PLAYER_STATE::DASH;
 		}
 	}
+
+
 	if (m_bUseDash)
 	{
 		// 대쉬 지속 시간이 끝났다면
@@ -231,40 +297,55 @@ void CPlayerScript::KeyCheck()
 		}
 		else
 		{
-			// 현재 상태가 대쉬일 때
-			if (m_eState == PLAYER_STATE::DASH)
+			m_fDashTime -= DT;
+			m_bDash = true;
+			
+			pos.x += m_fDashDir.x * 130.f * DT;
+			pos.y += m_fDashDir.y * 130.f * DT;
+
+			// 벽에 박으면
+			if (m_bWall)
 			{
-				m_fDashTime -= DT;
-				m_bDash = true;
+				// 대쉬 종료
+				pos.x -= m_fDashDir.x * 130.f * DT;
+				m_bDash = false;
+				m_fDashTime = -1.f;
+			}
 
-				pos.x += m_fDashDir.x * 130.f * DT;
-				pos.y += m_fDashDir.y * 130.f * DT;
+			// 머리 박으면
+			if (!m_bGround && m_bCollision)
+			{
+				pos.y -= m_fDashDir.y * 130.f * DT;
+				m_bDash = false;
+				m_fDashTime = -1.f;
 
-				// 벽에 박으면
-				if (m_bWall)
-				{
-					// 대쉬 종료
-					pos.x -= m_fDashDir.x * 130.f * DT;
-					m_bDash = false;
-					m_fDashTime = -1.f;
-				}
-
-				// 머리 박으면
-				if (!m_bGround && m_bCollision)
-				{
-					pos.y -= m_fDashDir.y * 130.f * DT;
-					m_bDash = false;
-					m_fDashTime = -1.f;
-				}
+				if (PLAYER_STATE::DREAM_DASH == m_eState)
+					Dead();
 			}
 
 		}
 	}
 
+	if (KEY_PRESSED(KEY::UP))
+	{
+		if (!m_bGround && !m_bCollision)
+		{
+			pos.y += m_fSpeed / 4.f * DT;
+		}
+	}
+	if (KEY_PRESSED(KEY::DOWN))
+	{
+		if (!m_bGround)
+		{
+			pos.y -= m_fSpeed / 4.f * DT;
+		}
+	}
+
+
 	Transform()->SetRelativePos(pos);
 
 	// Idle
-	if (Vec2(0.f, 0.f) == m_pPhysics->GetVelocity() && m_bGround && !m_bFlip)
+	if (Vec2(0.f, 0.f) == m_pPhysics->GetVelocity() && m_bGround && !m_bFlip && !m_bWalk)
 	{
 		m_eState = PLAYER_STATE::IDLE;
 	}
@@ -355,8 +436,6 @@ void CPlayerScript::PlayAnim()
 {
 	CAnimator2D* animator = Animator2D();
 
-	// 현재 재생중인 애니메이션이 반복 애니메이션이 아니고 끝나지 않았다면 다른 애니메이션을 재생하지 않는다.
-
 	switch (m_eState)
 	{
 	case PLAYER_STATE::IDLE:
@@ -372,7 +451,21 @@ void CPlayerScript::PlayAnim()
 		break;
 	case PLAYER_STATE::FLIP:
 		if (m_ePrevState != PLAYER_STATE::FLIP)
+		{
 			animator->Play(L"flip");
+			
+			// 사운드 재생
+			// 시드값을 얻기 위한 random_device 생성.
+			std::random_device rd;
+			// random_device 를 통해 난수 생성 엔진을 초기화 한다.
+			std::mt19937 gen(rd());
+			// 0 부터 99 까지 균등하게 나타나는 난수열을 생성하기 위해 균등 분포 정의.
+			std::uniform_int_distribution<int> dis(1, 6);
+			int rndNum = dis(gen);
+			wstring skey = L"sound\\brick\\game_gen_debris_stone_soft_0" + to_wstring(rndNum) + L".ogg";
+			Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(skey, skey);
+			pSound->Play(1, 0.5f, true);
+		}
 		else
 			if (animator->GetCurAnim()->IsFinish())
 				m_bFlip = false;
@@ -409,7 +502,17 @@ void CPlayerScript::PlayAnim()
 	break;
 	case PLAYER_STATE::DASH:
 		if (m_ePrevState != PLAYER_STATE::DASH)
+		{
 			animator->Play(L"dash");
+			// 사운드 재생
+			Ptr<CSound> pSound;
+			if (KEY_PRESSED(KEY::LEFT))
+				pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_dash_pink_left.ogg", L"sound\\player\\char_mad_dash_pink_left.ogg");
+			else if (KEY_PRESSED(KEY::RIGHT))
+				pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_dash_pink_right.ogg", L"sound\\player\\char_mad_dash_pink_right.ogg");
+			pSound->Stop();
+			pSound->Play(1, 0.5f);
+		}
 		break;
 	case PLAYER_STATE::DREAM_DASH:
 	{
@@ -431,12 +534,68 @@ void CPlayerScript::PlayAnim()
 	case PLAYER_STATE::CUTSCENE:
 		break;
 	case PLAYER_STATE::DEAD:
+	{
+		if (animator->GetCurAnim()->GetName() != L"death_h")
+		{
+			animator->Play(L"death_h");
+		}
+		else
+		{
+			static CTransition* pTransition = m_pTransition->GetScript<CTransition>();
+
+			if(animator->GetCurAnim()->GetCurFrmIdx() == 7)
+				pTransition->Play();
+
+			if (animator->GetCurAnim()->IsFinish())
+			{
+				Respwan();
+			}
+		}
+
+	}
 		break;
 	}
 }
 
 void CPlayerScript::Dead()
 {
+	m_eState = PLAYER_STATE::DEAD;
+	m_pPhysics->Deactivate();
+	
+	// 사운드 재생
+	Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_death.ogg", L"sound\\player\\char_mad_death.ogg");
+	pSound->Play(1, 0.8f, true);
+}
+
+void CPlayerScript::Respwan()
+{
+
+	m_eState = PLAYER_STATE::IDLE;
+	m_pPhysics->Activate();
+
+	switch (m_eStage)
+	{
+	case STAGE::S00:
+		Transform()->SetRelativePos(Vec3(-120.f, 121.f, Transform()->GetRelativePos().z));
+		break;
+	case STAGE::S01:		
+		Transform()->SetRelativePos(Vec3(83.f, 57.f, Transform()->GetRelativePos().z));
+		break;
+	case STAGE::S02:
+		Transform()->SetRelativePos(Vec3(110.f, -111.f, Transform()->GetRelativePos().z));
+		break;
+	case STAGE::S03:		
+		Transform()->SetRelativePos(Vec3(-134.f, -246.f, Transform()->GetRelativePos().z));
+		break;
+	case STAGE::S04:
+		break;
+	case STAGE::S05:
+		break;
+	}
+
+	// 사운드 재생
+	Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\player\\char_mad_revive.ogg", L"sound\\player\\char_mad_revive.ogg");
+	pSound->Play(1, 0.8f);
 }
 
 void CPlayerScript::OnChildCollisionEnter(CGameObject* _OtherObject, wstring _childName)
@@ -446,6 +605,13 @@ void CPlayerScript::OnChildCollisionEnter(CGameObject* _OtherObject, wstring _ch
 
 	if (nullptr == pOtherColScript)
 		return;
+
+	// Dead Check
+	if (COLLIDER2D_PROPERTY::SPIKE == pOtherColScript->GetColliderProterty() && _childName == L"03_col_body")
+	{
+		Dead();
+		return;
+	}
 
 	// Wall Check	
 	if (COLLIDER2D_PROPERTY::WALL == pOtherColScript->GetColliderProterty() && _childName == L"02_col_front")
@@ -490,25 +656,59 @@ void CPlayerScript::OnChildCollisionEnter(CGameObject* _OtherObject, wstring _ch
 	}
 
 	// DreamBlock Check
-	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherColScript->GetColliderProterty() && _childName == L"03_col_body")
+	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherColScript->GetColliderProterty())
 	{
-		if (m_bDash && PLAYER_STATE::DREAM_DASH != m_eState)
+		if (_childName == L"03_col_body")
 		{
-			m_eState = PLAYER_STATE::DREAM_DASH;
-		
-			Vec2 right = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
-			Vec2 up = Vec2(Transform()->GetRelativeUpDir().x, Transform()->GetRelativeUpDir().y);
-			
-			m_fDreamDashDir = Vec2(0.f, 0.f);
+			if (m_bDash && PLAYER_STATE::DREAM_DASH != m_eState)
+			{
+				// 상태 설정
+				m_eState = PLAYER_STATE::DREAM_DASH;
 
-			if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
-				m_fDreamDashDir += right;
-			if (KEY_PRESSED(KEY::UP))
-				m_fDreamDashDir += up;
-			if (KEY_PRESSED(KEY::DOWN))
-				m_fDreamDashDir += -up;
+				// 전방, 위쪽 방향 벡터 가져오기
+				Vec2 front = Vec2(Transform()->GetRelativeRightDir().x, Transform()->GetRelativeRightDir().y);
+				Vec2 up = Vec2(Transform()->GetRelativeUpDir().x, Transform()->GetRelativeUpDir().y);
 
-			m_fDreamDashDir.Normalize();
+				// 드림 대쉬 각도 구하기
+				m_fDreamDashDir = Vec2(0.f, 0.f);
+
+				if (KEY_PRESSED(KEY::LEFT) || KEY_PRESSED(KEY::RIGHT))
+					m_fDreamDashDir += front;
+				if (KEY_PRESSED(KEY::UP))
+					m_fDreamDashDir += up;
+				if (KEY_PRESSED(KEY::DOWN))
+					m_fDreamDashDir += -up;
+
+				m_fDreamDashDir.Normalize();
+				
+				// 사운드 재생
+
+				wstring soundKey = L"sound\\player\\char_mad_dreamblock_enter_01.ogg";
+				Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(soundKey, soundKey);
+				pSound->Play(1, 0.8f, true);
+			}
+		}
+
+		else if (_childName == L"01_col_bot")
+		{
+			if (!m_bDash && PLAYER_STATE::DREAM_DASH != m_eState && !m_bWall)
+			{
+				m_bGround = true;
+				if (nullptr != m_pPhysics)
+					m_pPhysics->OnGround();
+				m_lCurGround.push_back(_OtherObject);
+			}
+		}
+
+		else if (_childName == L"02_col_front")
+		{
+			if (!m_bDash && PLAYER_STATE::DREAM_DASH != m_eState)
+			{
+				m_bWall = true;
+				if (nullptr != m_pPhysics)
+					m_pPhysics->OnWall();
+				m_lCurWall.push_back(_OtherObject);
+			}
 		}
 	}
 }
@@ -560,14 +760,42 @@ void CPlayerScript::OnChildCollisionExit(CGameObject* _OtherObject, wstring _chi
 	}
 
 	// DreamBlock Check
-	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherCol->GetColliderProterty() && _childName == L"03_col_body")
+	if (COLLIDER2D_PROPERTY::DREAM_BLOCK == pOtherCol->GetColliderProterty())
 	{
-		m_eState = PLAYER_STATE::IDLE;
-		m_bDash = false;
-		m_bUseDash = false;
-		m_fDashTime = 0.23f;
-		m_fDreamDashDir = Vec2(0.f, 0.f);
-		m_fDashDir = Vec2(0.f, 0.f);
+		if (_childName == L"03_col_body")
+		{
+			m_eState = PLAYER_STATE::IDLE;
+			m_bDash = false;
+			m_bUseDash = false;
+			m_fDashTime = 0.23f;
+			m_fDreamDashDir = Vec2(0.f, 0.f);
+			m_fDashDir = Vec2(0.f, 0.f);
+
+			// 사운드 재생
+			wstring soundKey = L"sound\\player\\char_mad_dreamblock_exit_01.ogg";
+			Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(soundKey, soundKey);
+			pSound->Play(1, 0.8f, true);
+		}
+
+		else if (_childName == L"01_col_bot")
+		{
+			m_lCurGround.erase(std::remove(m_lCurGround.begin(), m_lCurGround.end(), _OtherObject), m_lCurGround.end());
+			if (m_lCurGround.empty())
+			{
+				m_bGround = false;
+				if (nullptr != m_pPhysics)
+					m_pPhysics->OnAir();
+			}
+		}
+
+		else if (_childName == L"02_col_front")
+		{
+			m_lCurWall.erase(std::remove(m_lCurWall.begin(), m_lCurWall.end(), _OtherObject), m_lCurWall.end());
+
+			if (m_lCurWall.empty())
+				m_bWall = false;
+
+		}
 	}
 }
 

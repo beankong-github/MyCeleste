@@ -4,7 +4,9 @@ CCameraMoveScript
 CCamTrigger
 CCollider2DScript
 CDreamBlock
+CEndingCut
 CGravity
 CPhysics
+CPlayerAfterImgScript
 CPlayerScript
 CTransition

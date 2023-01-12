@@ -134,7 +134,7 @@ void ResourceUI::Reload()
 			CResMgr::GetInst()->Load<CTexture>(m_vecResPath[i], m_vecResPath[i]);
 			break;
 		case RES_TYPE::SOUND:
-
+			CResMgr::GetInst()->Load<CSound>(m_vecResPath[i], m_vecResPath[i]);
 			break;
 		case RES_TYPE::SCENEFILE:
 			CResMgr::GetInst()->Load<CSceneFile>(m_vecResPath[i], m_vecResPath[i]);

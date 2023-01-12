@@ -50,9 +50,7 @@ void CMeshRender::render()
 
 		CAnimator2D::Clear();
 	}
-
-
-	if (!Animator2D())
+	else
 	{
 		CTexture* pAltas = (CTexture*)CResMgr::GetInst()->FindRes<CTexture>(m_strAtlasKey).Get();
 		tSprite* _info = CResMgr::GetInst()->FindSpriteOffsetInfo(m_strAtlasKey, m_strSpriteKey);

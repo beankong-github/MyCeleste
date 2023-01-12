@@ -159,6 +159,58 @@ float4 PS_DreamBlockBG(VTX_OUT _in) : SV_Target
 }
 
 
+// ========================
+// VS_Transition
+// BlendState           : DOMAIN_POSTPROCESS
+// DepthStencilState    : No_Write
+// DOMAIN               : OPAQUE
+#define COLOR g_vec4_0
+//=========================
+VTX_OUT VS_Transition(VTX_IN _in)
+{
+    VTX_OUT output = (VTX_OUT) 0.f;
+    
+    output.vPosition = mul(float4(_in.vPos, 1.f), g_matWVP);
+    output.vWorldPos = mul(float4(_in.vPos, 1.f), g_matWorld).xyz;
+    output.vUV = _in.vUV;
+    
+    return output;
+}
+
+float4 PS_Transition(VTX_OUT _in) : SV_Target
+{
+    float4 vOutColor = (float4) 0.f;
+
+    if (g_btex_0)
+    {
+        vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV);
+        
+    }
+    else
+    {
+        vOutColor = float4(1.f, 0.f, 1.f, 1.f);
+    }
+    
+    if (vOutColor.a <= 0.f)
+    {
+        discard;
+    }
+   
+    if (vOutColor.r >= COLOR.b)
+    {
+        discard;
+    }
+    if (vOutColor.g >= COLOR.b)
+    {
+        discard;
+    }
+    if (vOutColor.b >= COLOR.b)
+    {
+        discard;
+    }
+    
+    return vOutColor;
+}
 
 
 

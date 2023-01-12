@@ -12,10 +12,13 @@ enum class STAGE
     S05
 };
 
+class CPlayerScript;
+
 class CCamTrigger :
     public CScript
 {
 private:
+    CPlayerScript*  m_pPlayer;
     CGameObject*    m_pMainCam;
     STAGE           m_eNext;
 

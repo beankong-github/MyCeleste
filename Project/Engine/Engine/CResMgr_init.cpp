@@ -3,6 +3,8 @@
 
 void CResMgr::init()
 {
+	InitSound();
+
 	CreateEngineMesh();
 	CreateEngineTexture();
 	CreateEngineShader();
@@ -11,6 +13,11 @@ void CResMgr::init()
 	CreateEngineComputeShader();
 
 	LoadSpriteFromAtlas();
+}
+
+void CResMgr::update()
+{
+	CSound::g_pFMOD->update();
 }
 
 void CResMgr::CreateEngineMesh()
@@ -211,20 +218,20 @@ void CResMgr::CreateEngineShader()
 	AddRes<CGraphicsShader>(L"Std2DAlphaBlendColorShader", pShader, true);
 
 
-	// Transition Shader
+	// PlayerAfterImg Shader
 	pShader = new CGraphicsShader;
-	pShader->CreateVertexShader(L"shader\\std2d.fx", "VS_Transition");
-	pShader->CreatePixelShader(L"shader\\std2d.fx", "PS_Transition");
+	pShader->CreateVertexShader(L"shader\\std2d.fx", "VS_PlayerAfterImg");
+	pShader->CreatePixelShader(L"shader\\std2d.fx", "PS_PlayerAfterImg");
 
-	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_POSTPROCESS);
+	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_TRANSLUCENT);
 	pShader->SetRSType(RS_TYPE::CULL_NONE);
-	pShader->SetBSType(BS_TYPE::DEFAULT);
-	pShader->SetDSType(DS_TYPE::NO_TEST_NO_WRITE);
+	pShader->SetBSType(BS_TYPE::ALPHA_BLEND);
+	pShader->SetDSType(DS_TYPE::LESS);
 
 	pShader->AddTexParamInfo(L"OutputTex", TEX_PARAM::TEX_0);
 	pShader->AddScalarParamInfo(L"Color", SCALAR_PARAM::VEC4_0);
 
-	AddRes<CGraphicsShader>(L"TransitionShader", pShader, true);
+	AddRes<CGraphicsShader>(L"PlayerAfterImgShader", pShader, true);
 
 
 	// PaperBurn Shader
@@ -302,6 +309,22 @@ void CResMgr::CreateEngineShader()
 
 	AddRes<CGraphicsShader>(L"PostProcessShader", pShader, true);
 
+	// Transition Shader
+	pShader = new CGraphicsShader;
+	pShader->CreateVertexShader(L"shader\\postprocess.fx", "VS_Transition");
+	pShader->CreatePixelShader(L"shader\\postprocess.fx", "PS_Transition");
+
+	pShader->SetShaderDomain(SHADER_DOMAIN::DOMAIN_MASKED);
+	pShader->SetRSType(RS_TYPE::CULL_NONE);
+	pShader->SetBSType(BS_TYPE::ALPHA_BLEND);
+	pShader->SetDSType(DS_TYPE::LESS);
+
+	pShader->AddTexParamInfo(L"OutputTex", TEX_PARAM::TEX_0);
+	pShader->AddScalarParamInfo(L"Color", SCALAR_PARAM::VEC4_0);
+
+	AddRes<CGraphicsShader>(L"TransitionShader", pShader, true);
+
+
 	// DreamBlock Shader
 	pShader = new CGraphicsShader;
 
@@ -362,6 +385,17 @@ void CResMgr::CreateEngineMaterial()
 	{
 		pMtrl->Save(strContent + pMtrl->GetKey());
 	}
+
+	// PlayerAfterImgMtrl
+	pMtrl = new CMaterial;
+	pMtrl->SetShader(FindRes<CGraphicsShader>(L"PlayerAfterImgShader"));
+	AddRes<CMaterial>(L"material\\PlayerAfterImgMtrl", pMtrl);
+	pMtrl->CRes::SetRelativePath(pMtrl->GetKey());
+	if (FAILED(pMtrl->Load(strContent + pMtrl->GetRelativePath())))
+	{
+		pMtrl->Save(strContent + pMtrl->GetKey());
+	}
+
 
 	// TransitionMtrl
 	pMtrl = new CMaterial;
@@ -539,4 +573,15 @@ tSprite* CResMgr::FindSpriteOffsetInfo(wstring _atlasKey, wstring _key)
 //}
 
 
+void CResMgr::InitSound()
+{
+	FMOD::System_Create(&CSound::g_pFMOD);
 
+	if (nullptr == CSound::g_pFMOD)
+	{
+		assert(nullptr);
+	}
+
+	// 32개 채널 생성
+	CSound::g_pFMOD->init(32, FMOD_DEFAULT, nullptr);
+}

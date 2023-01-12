@@ -26,6 +26,8 @@
 #include <Script\CBadlineScript.h>
 #include <Script\CPhysics.h>
 #include <Script\CTransition.h>
+#include <Script\CEndingCut.h>
+#include <Script\CPlayerAfterImgScript.h>
 
 #include <Script\CSceneSaveLoad.h>
 #include "CImGuiMgr.h"
@@ -408,6 +410,12 @@ void MenuUI::AddScript(CGameObject* pTarget, SCRIPT_TYPE _type)
       break;
   case SCRIPT_TYPE::TRANSITION:
       pTarget->AddComponent(new CTransition);
+      break;
+  case SCRIPT_TYPE::ENDINGCUT:
+      pTarget->AddComponent(new CEndingCut);
+      break;
+  case SCRIPT_TYPE::PLAYERAFTERIMGSCRIPT:
+      pTarget->AddComponent(new CPlayerAfterImgScript);
       break;
   }
 

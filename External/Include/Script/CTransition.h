@@ -11,15 +11,25 @@ private:
     Vec4                    m_vColor;
     int                     m_iCurIdx;
     vector<CTexture*>       m_vTex;
+    
+    bool                    m_bPlay;
+    bool                    m_bSceneEnd;
+    UINT                    m_iStartFrm;
+    UINT                    m_iEndFrm;
 
 public:
-    virtual void start();
-    virtual void update();
-    virtual void lateupdate();
+    void SceneStart();
+    void SceneEnd();
+
+    void Play();
+    void Stop();
+public:
+    virtual void start() override;
+    virtual void update() override;
+    virtual void lateupdate() override;
 
     virtual void SaveToScene(FILE* _pFile) override;
     virtual void LoadFromScene(FILE* _pFile) override;
-
 
     CLONE(CTransition)
 

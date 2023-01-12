@@ -185,7 +185,9 @@ call CodeGen.exe</Command>
     <ClInclude Include="CCamTrigger.h" />
     <ClInclude Include="CCollider2DScript.h" />
     <ClInclude Include="CDreamBlock.h" />
+    <ClInclude Include="CEndingCut.h" />
     <ClInclude Include="CPhysics.h" />
+    <ClInclude Include="CPlayerAfterImgScript.h" />
     <ClInclude Include="CPlayerScript.h" />
     <ClInclude Include="CSceneSaveLoad.h" />
     <ClInclude Include="CScriptMgr.h" />
@@ -200,7 +202,9 @@ call CodeGen.exe</Command>
     <ClCompile Include="CCamTrigger.cpp" />
     <ClCompile Include="CCollider2DScript.cpp" />
     <ClCompile Include="CDreamBlock.cpp" />
+    <ClCompile Include="CEndingCut.cpp" />
     <ClCompile Include="CPhysics.cpp" />
+    <ClCompile Include="CPlayerAfterImgScript.cpp" />
     <ClCompile Include="CPlayerScript.cpp" />
     <ClCompile Include="CSceneSaveLoad.cpp" />
     <ClCompile Include="CScriptMgr.cpp" />

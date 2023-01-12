@@ -13,8 +13,9 @@ struct Vertex
 {
 	Vec3 vPos;		// 좌표	
 	Vec4 vColor;	// 색상
-
 	Vec2 vUV;
+
+	// 구조 추가
 };
 
 typedef Vertex Vtx;
@@ -96,8 +97,6 @@ struct tLightInfo
 	float		fRange;
 	Vec3		vPadding;
 };
-
-
 
 // ===================
 // 상수버퍼 대응 구조체

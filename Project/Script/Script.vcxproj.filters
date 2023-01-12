@@ -37,7 +37,13 @@
     <ClInclude Include="CPhysics.h">
       <Filter>Script</Filter>
     </ClInclude>
-    <ClInclude Include="CTransition.h" />
+    <ClInclude Include="CTransition.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CEndingCut.h">
+      <Filter>Script</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerAfterImgScript.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Script.cpp">
@@ -76,7 +82,13 @@
     <ClCompile Include="CPhysics.cpp">
       <Filter>Script</Filter>
     </ClCompile>
-    <ClCompile Include="CTransition.cpp" />
+    <ClCompile Include="CTransition.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CEndingCut.cpp">
+      <Filter>Script</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerAfterImgScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Default">

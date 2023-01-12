@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine/CScript.h>
+#include "CCamTrigger.h"
 
 enum class PLAYER_STATE
 {
@@ -30,10 +31,13 @@ private:
     PLAYER_STATE    m_eState;
     PLAYER_STATE    m_ePrevState;
 
+    STAGE           m_eStage;
+
     bool    m_bGround;
     bool    m_bWall;
     bool    m_bCollision;
 
+    bool    m_bWalk;
     bool    m_bUseJump;
     bool    m_bUseDash;
     bool    m_bDash;
@@ -58,6 +62,9 @@ private:
     list<CGameObject*> m_lCurWall;
     list<CGameObject*> m_lCurGround;
 
+    // Transition 
+    CGameObject* m_pTransition;
+
     //Script
     CPhysics* m_pPhysics;
 
@@ -81,7 +88,11 @@ public:
     Vec4 GetDashHairColor() { return m_vDashHairColor; }
     PLAYER_STATE GetPlayerState() { return m_eState; }
     PLAYER_STATE GetPrevPlayerState() { return m_ePrevState; }
+    
+    STAGE   GetCurStage() { return m_eStage; }
+    void    SetCurStage(STAGE _eStage) { m_eStage = _eStage; }
 
+    bool    UseDash() { return m_bUseDash; }
 
  // 1프레임마다 할 일
 private:
@@ -91,6 +102,7 @@ private:
 
 public:
     void Dead();
+    void Respwan();
 
 // 이벤트
 private:    

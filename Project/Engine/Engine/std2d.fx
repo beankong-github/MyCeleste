@@ -235,13 +235,12 @@ float4 PS_Std2DAlphaColor(VTX_OUT _in) : SV_Target
 }
 
 // ========================
-// VS_Transition
-// BlendState           : DOMAIN_POSTPROCESS
-// DepthStencilState    : No_Write
-// DOMAIN               : OPAQUE
-//#define COLOR g_vec4_0
+// PlayerAfterImg
+// BlendState           : ALPHA_BLEND
+// DepthStencilState    : LESS
+// DOMAIN               : DOMAIN_TRANSLUCENT
 //=========================
-VTX_OUT VS_Transition(VTX_IN _in)
+VTX_OUT VS_PlayerAfterImg(VTX_IN _in)
 {
     VTX_OUT output = (VTX_OUT) 0.f;
     
@@ -252,30 +251,59 @@ VTX_OUT VS_Transition(VTX_IN _in)
     return output;
 }
 
-float4 PS_Transition(VTX_OUT _in) : SV_Target
+float4 PS_PlayerAfterImg(VTX_OUT _in) : SV_Target
 {
     float4 vOutColor = (float4) 0.f;
-
-   if (g_btex_0)
-   {       
-        vOutColor = g_tex_0.Sample(g_sam_0, _in.vUV);
+    
+    // Animation 정보가 있는 경우
+    if (g_useAnim2D)
+    {
+        float2 vUV = _in.vUV * g_vSlice; // * g_vBackgroundSize;
+        vUV = vUV + g_vLT; //        -(g_vBackgroundSize - g_vSlice) / 2.f + g_vLT - g_vOffset;
         
-        if (vOutColor.r == COLOR.r 
-            && vOutColor.g == COLOR.g
-            && vOutColor.b == COLOR.b)
+        if (vUV.x < g_vLT.x || g_vLT.x + g_vSlice.x < vUV.x
+            || vUV.y < g_vLT.y || g_vLT.y + g_vSlice.y < vUV.y)
         {
             discard;
         }
-   }
-   else
-   {
-       vOutColor = float4(1.f, 0.f, 1.f, 1.f);
-   }
+                
+        vOutColor = g_Atlas.Sample(g_sam_1, vUV);
+    }
+    else
+    {
+        if (g_btex_0)
+        {
+            float2 vUV = _in.vUV * s_vSize;
+            vUV = vUV + s_vPos;
+            
+            if (vUV.x < s_vPos.x || s_vPos.x + s_vSize.x < vUV.x
+            || vUV.y < s_vPos.y || s_vPos.y + s_vSize.y < vUV.y)
+            {
+                discard;
+            }
+            
+            vOutColor = g_tex_0.Sample(g_sam_1, vUV);
+        }
+        else
+        {
+            vOutColor = float4(1.f, 0.f, 1.f, 1.f);
+        }
+    }
     
-   if (vOutColor.a <= 0.f)
-   {
-       discard;
-   }
+    if (vOutColor.a <= 0.f)
+    {
+        discard;
+    }
+    else
+    {
+        vOutColor.r = 1.f;
+        vOutColor.g = 1.f;
+        vOutColor.b = 1.f;
+        vOutColor.a = 0.1f;
+
+    }
+      
+    vOutColor *= COLOR;
     
     return vOutColor;
 }

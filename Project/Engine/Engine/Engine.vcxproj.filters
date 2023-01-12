@@ -154,6 +154,9 @@
     <ClInclude Include="CXMLData.h">
       <Filter>Engine\07. Resource\09. XMLData</Filter>
     </ClInclude>
+    <ClInclude Include="CSound.h">
+      <Filter>Engine\07. Resource\06. Sound</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -291,6 +294,9 @@
     </ClCompile>
     <ClCompile Include="CXMLData.cpp">
       <Filter>Engine\07. Resource\09. XMLData</Filter>
+    </ClCompile>
+    <ClCompile Include="CSound.cpp">
+      <Filter>Engine\07. Resource\06. Sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

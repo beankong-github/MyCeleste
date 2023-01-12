@@ -6,9 +6,12 @@
 #include <Engine\CEventMgr.h>
 #include <Engine\CPrefab.h>
 
+#include "CPlayerScript.h"
+
 CCamTrigger::CCamTrigger()
 	: CScript((int)SCRIPT_TYPE::CAMTRIGGER)
 	, m_pMainCam(nullptr)
+	, m_pPlayer(nullptr)
 	, m_bCamMove(false)
 	, m_eNext(STAGE::NONE)
 	, m_vTargetPos()
@@ -35,6 +38,9 @@ void CCamTrigger::start()
 {
 	m_pMainCam = CRenderMgr::GetInst()->GetMainCam();
 	assert(m_pMainCam);
+
+	m_pPlayer = CSceneMgr::GetInst()->FindObjectByName(L"Player")->GetScript<CPlayerScript>();
+	assert(m_pPlayer);
 }
 
 void CCamTrigger::update()
@@ -42,14 +48,16 @@ void CCamTrigger::update()
 	if (m_bCamMove)
 	{
 		Vec3 Pos = m_pMainCam->Transform()->GetRelativePos();
-		if (abs(Pos.x - m_vTargetPos.x) <= 0.0001f && abs(Pos.y - m_vTargetPos.y) <= 0.0001f)
+ 		Pos = Pos.Lerp(Pos, Vec3(m_vTargetPos.x, m_vTargetPos.y, Pos.z), 0.1f);
+		m_pMainCam->Transform()->SetRelativePos(Pos);
+
+		if (abs(Pos.x - m_vTargetPos.x) <= 0.01f && abs(Pos.y - m_vTargetPos.y) <= 0.01f)
 		{
+			m_pMainCam->Transform()->SetRelativePos(Vec3(m_vTargetPos.x, m_vTargetPos.y, Pos.z));
 			m_bCamMove = false;
 			m_vTargetPos = Vec2{ 0.f, 0.f };
 			return;
 		} 
- 		Pos = Pos.Lerp(Pos, Vec3(m_vTargetPos.x, m_vTargetPos.y, Pos.z), 0.1f);
-		m_pMainCam->Transform()->SetRelativePos(Pos);
 	}
 }
 
@@ -88,16 +96,19 @@ void CCamTrigger::CreateNextStage()
 	break;
 	case STAGE::S01:
 	{
+		m_pPlayer->SetCurStage(STAGE::S01);
+
 		m_vTargetPos = Vec2(0.f, 0.f);
 
 		m_bCamMove = true;
-
 		TilePref = L"prefab\\Map_1.pref";
 		BGTilePref = L"prefab\\Map_1_BG.pref";
 	}
 	break;
 	case STAGE::S02:
 	{
+		m_pPlayer->SetCurStage(STAGE::S02);
+
 		m_vTargetPos = Vec2(0.f, -172.f);
 
 		m_bCamMove = true;
@@ -112,6 +123,8 @@ void CCamTrigger::CreateNextStage()
 	break;
 	case STAGE::S03:
 	{
+		m_pPlayer->SetCurStage(STAGE::S03);
+
 		m_vTargetPos = Vec2(0.f, -332.f);
 
 		m_bCamMove = true;
@@ -125,6 +138,8 @@ void CCamTrigger::CreateNextStage()
 	break;
 	case STAGE::S04:
 	{
+		m_pPlayer->SetCurStage(STAGE::S04);
+
 		m_vTargetPos = Vec2(248.f, -510.f);
 
 		m_bCamMove = true;
@@ -138,6 +153,8 @@ void CCamTrigger::CreateNextStage()
 	break;
 	case STAGE::S05:
 	{
+		m_pPlayer->SetCurStage(STAGE::S05);
+
 		m_vTargetPos = Vec2(568.f, -510.f);
 
 		m_bCamMove = true;
